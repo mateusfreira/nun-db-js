@@ -1,0 +1,14 @@
+<script charset="utf-8" src="../index.js"></script>
+<script charset="utf-8">
+  const freira = new FreiraDb('ws://127.0.0.1:3012');
+  freira.watch('some', event => {
+    console.log(event);
+    document.querySelector('#date').innerHTML = new Date(parseInt(event.value.time));
+  });
+</script>
+
+
+
+<div id="date">
+
+</div>

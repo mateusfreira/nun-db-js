@@ -1,0 +1,77 @@
+<script charset="utf-8" src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.15/lodash.min.js"></script>
+<script charset="utf-8" src="../index.js"></script>
+<script type="text/x-template" id="polygraph-template">
+  <g>
+    <polygon :points="points"></polygon>
+    <circle cx="100" cy="100" r="80"></circle>
+    <axis-label
+      v-for="(stat, index) in stats"
+      :stat="stat"
+      :index="index"
+      :total="stats.length">
+    </axis-label>
+  </g>
+</script>
+
+<!-- template for the axis label component. -->
+<script type="text/x-template" id="axis-label-template">
+  <text :x="point.x" :y="point.y">{{stat.label}}</text>
+</script>
+<style>
+body {
+    font-family: Helvetica Neue, Arial, sans-serif;
+}
+
+polygon {
+    fill: #42b983;
+    opacity: .75;
+}
+
+circle {
+    fill: transparent;
+    stroke: #999;
+}
+
+text {
+    font-family: Helvetica Neue, Arial, sans-serif;
+    font-size: 10px;
+    fill: #666;
+}
+
+label {
+    display: inline-block;
+    margin-left: 10px;
+    width: 20px;
+}
+
+#raw {
+    position: absolute;
+    top: 0;
+    left: 300px;
+}
+</style>
+
+<!-- demo root element -->
+<div id="demo">
+  <!-- Use the component -->
+  <svg width="200" height="200">
+    <polygraph :stats="stats"></polygraph>
+  </svg>
+  <!-- controls -->
+  <div v-for="stat in stats">
+    <label>{{stat.label}}</label>
+    <input type="range" v-model="stat.value" min="0" max="100">
+    <span>{{stat.value}}</span>
+    <button @click="remove(stat)" class="remove">X</button>
+  </div>
+  <form id="add">
+    <input name="newlabel" v-model="newLabel">
+    <button @click="add">Add a Stat</button>
+  </form>
+  <pre id="raw">{{ stats }}</pre>
+</div>
+
+<p style="font-size:12px">* input[type="range"] requires IE10 or above.</p>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="./vue.js"></script>
+
