@@ -51,6 +51,10 @@ function init(window) {
     getValue(name) {
       return this._checkConnectionReady().then(() => {
         this._connection.send(`get ${name}`);
+        const pendingPromise = new Promise(resolve => {
+          this.pedingResolve = resolve;
+        });
+        return pendingPromise;
       });
     }
 
@@ -93,6 +97,10 @@ function init(window) {
     _rewatch() {
       const keysToWatch = Object.keys(this._watchers);
       keysToWatch.forEach(key => this._connection.send(`watch ${key}`));
+    }
+
+    _valueHandler(value) {
+      this.pedingResolve && this.pedingResolve(JSON.stringify(value).value);
     }
 
     _changedHandler(name, value) {
