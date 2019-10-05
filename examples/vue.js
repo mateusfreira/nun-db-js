@@ -42,12 +42,12 @@ Vue.component('polygraph', {
     // a computed property for the polygon's points
     points: function() {
       setState(this.stats);
-      send = true
-      var total = this.stats.length
+      send = true;
+      var total = this.stats.length;
       return this.stats.map(function(stat, i) {
-        var point = valueToPoint(stat.value, i, total)
-        return point.x + ',' + point.y
-      }).join(' ')
+        var point = valueToPoint(stat.value, i, total);
+        return point.x + ',' + point.y;
+      }).join(' ');
     }
   },
   components: {
@@ -64,7 +64,7 @@ Vue.component('polygraph', {
           return valueToPoint(+this.stat.value + 10,
             this.index,
             this.total
-          )
+          );
         }
       }
     }

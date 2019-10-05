@@ -28,7 +28,6 @@ function init(window) {
     messageHandler(message) {
       const messageParts = message.data.split(' ');
       const [command, name, value] = messageParts;
-      console.log(command, name, value);
       const methodName = `_${command}Handler`;
       if (this[methodName]) {
         this[methodName](name, value);
@@ -45,6 +44,13 @@ function init(window) {
       this._ids.push(objValue._id);
       return this._checkConnectionReady().then(() => {
         this._connection.send(`set ${name} ${JSON.stringify(objValue)}`);
+      });
+    }
+
+
+    getValue(name) {
+      return this._checkConnectionReady().then(() => {
+        this._connection.send(`get ${name}`);
       });
     }
 
