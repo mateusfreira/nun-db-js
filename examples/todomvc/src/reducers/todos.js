@@ -7,21 +7,17 @@ import {
   CLEAR_COMPLETED
 } from '../constants/ActionTypes'
 
-const initialState = [
-  {
-    text: 'Use Redux',
-    completed: false,
-    id: 0
-  }
-]
+const initialState = []
 
 export default function todos(state = initialState, action) {
   switch (action.type) {
+    case 'newState':
+      return action.state.todos;
     case ADD_TODO:
       return [
         ...state,
         {
-          id: state.reduce((maxId, todo) => Math.max(todo.id, maxId), -1) + 1,
+          id: Date.now(),
           completed: false,
           text: action.text
         }

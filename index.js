@@ -1,4 +1,15 @@
-function init(window) {
+(function(root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module.
+    define(['freira-db'], factory);
+  } else if (typeof module === 'object' && module.exports) {
+    // Node.
+    module.exports = factory(require('freira-db'));
+  } else {
+    // Browser globals (root is window)
+    root.FreiraDb = factory(root.FreiraDb);
+  }
+}(typeof self !== 'undefined' ? self : this, function(b) {
   const RECONNECT_TIME = 1000;
 
   function setupEvents(db, connectionListener) {
@@ -26,11 +37,12 @@ function init(window) {
     }
 
     messageHandler(message) {
-      const messageParts = message.data.split(' ');
-      const [command, name, value] = messageParts;
+      const messageParts = message.data.split(/\s(.+)/);
+      console.log(messageParts);
+      const [command, value] = messageParts;
       const methodName = `_${command}Handler`;
       if (this[methodName]) {
-        this[methodName](name, value);
+        this[methodName](value);
       } else {
         console.error(`${command} Handler not implemented`);
       }
@@ -43,7 +55,7 @@ function init(window) {
       };
       this._ids.push(objValue._id);
       return this._checkConnectionReady().then(() => {
-        this._connection.send(`set ${name} ${JSON.stringify(objValue)}`);
+        this._connection.send(`set ${name} ${JSON.stringify(objValue, null, 0)}`);
       });
     }
 
@@ -103,7 +115,8 @@ function init(window) {
       this.pedingResolve && this.pedingResolve(JSON.parse(value).value);
     }
 
-    _changedHandler(name, value) {
+    _changedHandler(event) {
+      const [name, value] = event.split(/\s(.+)/);
       const watchers = this._watchers[name] || [];
       watchers.forEach(watcher => {
         try {
@@ -120,8 +133,6 @@ function init(window) {
       });
     }
   }
-  window.FreiraDb = FreiraDb;
-}
-
-init(window);
+  return FreiraDb;
+}));
 
