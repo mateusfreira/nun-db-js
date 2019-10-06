@@ -100,7 +100,7 @@ function init(window) {
     }
 
     _valueHandler(value) {
-      this.pedingResolve && this.pedingResolve(JSON.stringify(value).value);
+      this.pedingResolve && this.pedingResolve(JSON.parse(value).value);
     }
 
     _changedHandler(name, value) {

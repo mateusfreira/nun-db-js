@@ -1,7 +1,7 @@
 //const freira = new FreiraDb('ws://127.0.0.1:3012');
 const freira = new FreiraDb('ws://45.56.110.92:3012');
 // The raw data to observe
-var stats = [{
+var initialStats = [{
     label: 'A',
     value: 100
   },
@@ -32,92 +32,96 @@ var stats = [{
 ]
 let send = true;
 const setState = state => {
-  send && freira && freira.setValue('state', stats);
+  send && freira && freira.setValue('state', state);
 };
-// A resusable polygon graph component
-Vue.component('polygraph', {
-  props: ['stats'],
-  template: '#polygraph-template',
-  computed: {
-    // a computed property for the polygon's points
-    points: function() {
-      setState(this.stats);
-      send = true;
-      var total = this.stats.length;
-      return this.stats.map(function(stat, i) {
-        var point = valueToPoint(stat.value, i, total);
-        return point.x + ',' + point.y;
-      }).join(' ');
-    }
-  },
-  components: {
-    // a sub component for the labels
-    'axis-label': {
-      props: {
-        stat: Object,
-        index: Number,
-        total: Number
-      },
-      template: '#axis-label-template',
-      computed: {
-        point: function() {
-          return valueToPoint(+this.stat.value + 10,
-            this.index,
-            this.total
-          );
+freira.getValue('state').then(stats => {
+  stats = stats || initialStats;
+  // A resusable polygon graph component
+  Vue.component('polygraph', {
+    props: ['stats'],
+    template: '#polygraph-template',
+    computed: {
+      // a computed property for the polygon's points
+      points: function() {
+        setState(this.stats);
+        send = true;
+        var total = this.stats.length;
+        return this.stats.map(function(stat, i) {
+          var point = valueToPoint(stat.value, i, total);
+          return point.x + ',' + point.y;
+        }).join(' ');
+      }
+    },
+    components: {
+      // a sub component for the labels
+      'axis-label': {
+        props: {
+          stat: Object,
+          index: Number,
+          total: Number
+        },
+        template: '#axis-label-template',
+        computed: {
+          point: function() {
+            return valueToPoint(+this.stat.value + 10,
+              this.index,
+              this.total
+            );
+          }
         }
       }
     }
-  }
-})
+  });
 
-// math helper...
-function valueToPoint(value, index, total) {
-  var x = 0
-  var y = -value * 0.8
-  var angle = Math.PI * 2 / total * index
-  var cos = Math.cos(angle)
-  var sin = Math.sin(angle)
-  var tx = x * cos - y * sin + 100
-  var ty = x * sin + y * cos + 100
-  return {
-    x: tx,
-    y: ty
+  // math helper...
+  //
+  function valueToPoint(value, index, total) {
+    var x = 0;
+    var y = -value * 0.8;
+    var angle = Math.PI * 2 / total * index;
+    var cos = Math.cos(angle);
+    var sin = Math.sin(angle);
+    var tx = x * cos - y * sin + 100;
+    var ty = x * sin + y * cos + 100;
+    return {
+      x: tx,
+      y: ty
+    };
   }
-}
 
-// bootstrap the demo
-new Vue({
-  el: '#demo',
-  data: {
-    newLabel: '',
-    stats: stats
-  },
-  mounted: () => {
-    freira.watch('state', event => {
-      send = false
-      event.value.forEach((stat, i) => {
-        this.stats[i].value = parseInt(stat.value);
-      });
-    });
-  },
-  methods: {
-    add: function(e) {
-      e.preventDefault()
-      if (!this.newLabel) return
-      this.stats.push({
-        label: this.newLabel,
-        value: 100
-      })
-      this.newLabel = ''
+  // bootstrap the demo
+  new Vue({
+    el: '#demo',
+    data: {
+      newLabel: '',
+      stats: stats
     },
-    remove: function(stat) {
-      if (this.stats.length > 3) {
-        this.stats.splice(this.stats.indexOf(stat), 1)
-      } else {
-        alert('Can\'t delete more!')
+    mounted: () => {
+      freira.watch('state', event => {
+        send = false
+        event.value.forEach((stat, i) => {
+          this.stats[i].value = parseInt(stat.value);
+        });
+      });
+    },
+    methods: {
+      add: function(e) {
+        e.preventDefault()
+        if (!this.newLabel) return
+        this.stats.push({
+          label: this.newLabel,
+          value: 100
+        })
+        this.newLabel = ''
+      },
+      remove: function(stat) {
+        if (this.stats.length > 3) {
+          this.stats.splice(this.stats.indexOf(stat), 1)
+        } else {
+          alert('Can\'t delete more!')
+        }
       }
     }
-  }
-})
+  });
+});
 
