@@ -2,6 +2,7 @@
   "name": "todomvc",
   "version": "0.0.1",
   "private": true,
+  "homepage": "http://127.0.0.1:8080/todomvc/build/",
   "devDependencies": {
     "react-scripts": "^3.0.0",
     "react-test-renderer": "^16.8.6"
