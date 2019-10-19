@@ -25,11 +25,9 @@
     "url": "https://github.com/mateusfreira/freira-db-js/issues"
   },
   "homepage": "https://github.com/mateusfreira/freira-db-js#readme",
-  "dependencies": {
-    "bdd-lazy-var": "^2.5.2",
-    "karma-chrome-launcher": "^3.1.0"
-  },
   "devDependencies": {
+    "bdd-lazy-var": "^2.5.2",
+    "karma-chrome-launcher": "^3.1.0",
     "chai": "^4.2.0",
     "karma": "^4.3.0",
     "karma-chai": "^0.1.0",
