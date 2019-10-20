@@ -32,7 +32,7 @@
       this._connectionPromise = new Promise((resolve, reject) => {
         this._connection = new WebSocket(this._databaseUrl);
         setupEvents(this, {
-          connectReady: ()=> {
+          connectReady: () => {
             this.auth(this._user, this._pwd);
           },
           authSuccess: resolve,
@@ -67,14 +67,14 @@
     }
 
     auth(user, pwd) {
-        this._connection && this._connection.send(`auth ${user} ${pwd}`);
+      this._connection && this._connection.send(`auth ${user} ${pwd}`);
     }
 
 
     getValue(name) {
       return this._checkConnectionReady().then(() => {
         this._connection.send(`get ${name}`);
-        const pendingPromise = new Promise(resolve, reject=> {
+        const pendingPromise = new Promise((resolve, reject) => {
           this.pedingResolve = resolve;
           this.pedingReject = reject;
         });
@@ -126,7 +126,7 @@
     _valueHandler(value) {
       try {
         this.pedingResolve && this.pedingResolve(JSON.parse(value).value);
-      }catch(e) {
+      } catch (e) {
         this.pedingReject && this.pedingReject(e);
       }
       delete this.pedingResolve;
