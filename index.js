@@ -17,19 +17,26 @@
     db._connection.onopen = db._onOpen.bind(db, connectionListener);
     db._connection.onerror = db._onError.bind(db, connectionListener);
     db._connection.onclose = db._onClose.bind(db);
+    db._connectionListener = connectionListener;
   }
   class FreiraDb {
-    constructor(dbUrl) {
+    constructor(dbUrl, user = "", pwd = "") {
       this._databaseUrl = dbUrl;
       this.connect();
       this._watchers = {};
       this._ids = [];
+      this._user = user;
+      this._pwd = pwd;
     }
     connect() {
       this._connectionPromise = new Promise((resolve, reject) => {
         this._connection = new WebSocket(this._databaseUrl);
         setupEvents(this, {
-          connectReady: resolve,
+          connectReady: ()=> {
+            this.auth(this._user, this._pwd);
+          },
+          authSuccess: resolve,
+          authFail: reject,
           connectionError: reject
         });
       });
@@ -59,12 +66,17 @@
       });
     }
 
+    auth(user, pwd) {
+        this._connection && this._connection.send(`auth ${user} ${pwd}`);
+    }
+
 
     getValue(name) {
       return this._checkConnectionReady().then(() => {
         this._connection.send(`get ${name}`);
-        const pendingPromise = new Promise(resolve => {
+        const pendingPromise = new Promise(resolve, reject=> {
           this.pedingResolve = resolve;
+          this.pedingReject = reject;
         });
         return pendingPromise;
       });
@@ -112,7 +124,21 @@
     }
 
     _valueHandler(value) {
-      this.pedingResolve && this.pedingResolve(JSON.parse(value).value);
+      try {
+        this.pedingResolve && this.pedingResolve(JSON.parse(value).value);
+      }catch(e) {
+        this.pedingReject && this.pedingReject(e);
+      }
+      delete this.pedingResolve;
+      delete this.pedingReject;
+    }
+
+    _validHandler(value) {
+      this._connectionListener.authSuccess();
+    }
+
+    _invalidHandler(value) {
+      this._connectionListener.authFail();
     }
 
     _changedHandler(event) {

@@ -29,12 +29,12 @@ var initialStats = [{
     label: 'H',
     value: 100
   }
-]
+];
 let send = true;
 const setState = state => {
   send && freira && freira.setValue('state', state);
 };
-freira.getValue('state').then(stats => {
+freira.getValue('state').catch(()=>{}).then(stats => {
   stats = stats || initialStats;
   // A resusable polygon graph component
   Vue.component('polygraph', {
