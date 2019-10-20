@@ -45,7 +45,6 @@
 
     messageHandler(message) {
       const messageParts = message.data.split(/\s(.+)/);
-      console.log(messageParts);
       const [command, value] = messageParts;
       const methodName = `_${command}Handler`;
       if (this[methodName]) {
