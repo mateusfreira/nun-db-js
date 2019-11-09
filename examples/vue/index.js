@@ -34,7 +34,7 @@ let send = true;
 const setState = state => {
   send && freira && freira.setValue('state', state);
 };
-freira.getValue('state').catch(()=>{}).then(stats => {
+freira.getValue('state').catch(() => {}).then(stats => {
   stats = stats || initialStats;
   // A resusable polygon graph component
   Vue.component('polygraph', {
@@ -96,29 +96,29 @@ freira.getValue('state').catch(()=>{}).then(stats => {
       newLabel: '',
       stats: stats
     },
-    mounted: () => {
+    mounted: function() {
       freira.watch('state', event => {
-        send = false
-        event.value.forEach((stat, i) => {
-          this.stats[i].value = parseInt(stat.value);
-        });
+        send = false;
+        this.stats = event.value;
       });
     },
     methods: {
       add: function(e) {
-        e.preventDefault()
-        if (!this.newLabel) return
+        send = true;
+        e.preventDefault();
+        if (!this.newLabel) return;
         this.stats.push({
           label: this.newLabel,
           value: 100
-        })
-        this.newLabel = ''
+        });
+        this.newLabel = '';
       },
       remove: function(stat) {
+        send = true;
         if (this.stats.length > 3) {
-          this.stats.splice(this.stats.indexOf(stat), 1)
+          this.stats.splice(this.stats.indexOf(stat), 1);
         } else {
-          alert('Can\'t delete more!')
+          alert('Can\'t delete more!');
         }
       }
     }
