@@ -1,5 +1,6 @@
 //const freira = new FreiraDb('ws://127.0.0.1:3012');
-const freira = new FreiraDb('ws://45.56.110.92:3012');
+const freira = new FreiraDb('ws://127.0.0.1:3012', "mateus", "mateus", "vue", "vue_pwd");
+//const freira = new FreiraDb('ws://45.56.110.92:3012', "mateus", "mateus", "vue", "vue_pwd");
 // The raw data to observe
 var initialStats = [{
     label: 'A',

@@ -20,13 +20,15 @@
     db._connectionListener = connectionListener;
   }
   class FreiraDb {
-    constructor(dbUrl, user = "", pwd = "") {
+    constructor(dbUrl, user = "", pwd = "", db, token) {
       this._databaseUrl = dbUrl;
       this.connect();
       this._watchers = {};
       this._ids = [];
       this._user = user;
       this._pwd = pwd;
+      this._db = db;
+      this._token = token;
     }
     connect() {
       this._connectionPromise = new Promise((resolve, reject) => {
@@ -35,7 +37,10 @@
           connectReady: () => {
             this.auth(this._user, this._pwd);
           },
-          authSuccess: resolve,
+          authSuccess: () => {
+            this.useDb(this._db, this._token);
+            resolve();
+          },
           authFail: reject,
           connectionError: reject
         });
@@ -67,6 +72,10 @@
 
     auth(user, pwd) {
       this._connection && this._connection.send(`auth ${user} ${pwd}`);
+    }
+
+    useDb(db, token) {
+      this._connection && this._connection.send(`use-db ${db} ${token}`);
     }
 
 
