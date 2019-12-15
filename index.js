@@ -4,12 +4,13 @@
     define(['freira-db'], factory);
   } else if (typeof module === 'object' && module.exports) {
     // Node.
-    module.exports = factory(require('freira-db'));
+    module.exports = factory(root.FreiraDb);
   } else {
     // Browser globals (root is window)
     root.FreiraDb = factory(root.FreiraDb);
   }
 }(typeof self !== 'undefined' ? self : this, function(b) {
+  const _webSocket = typeof WebSocket != 'undefined' ? WebSocket : require('websocket').w3cwebsocket;
   const RECONNECT_TIME = 1000;
 
   function setupEvents(db, connectionListener) {
@@ -32,7 +33,7 @@
     }
     connect() {
       this._connectionPromise = new Promise((resolve, reject) => {
-        this._connection = new WebSocket(this._databaseUrl);
+        this._connection = new _webSocket(this._databaseUrl);
         setupEvents(this, {
           connectReady: () => {
             this.auth(this._user, this._pwd);
