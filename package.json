@@ -1,7 +1,7 @@
 {
-  "name": "freira-db",
+  "name": "nun-db",
   "version": "1.0.0",
-  "description": "JS drive for freira-db",
+  "description": "JS drive for nun-db",
   "main": "index.js",
   "directories": {
     "example": "examples"
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mateusfreira/freira-db-js.git"
+    "url": "git+https://github.com/mateusfreira/nun-db-js.git"
   },
   "keywords": [
     "Real",
@@ -19,12 +19,12 @@
     "Key",
     "value"
   ],
-  "author": "mateus.freira@gmai.com",
+  "author": "mateus.feira@gmai.com",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mateusfreira/freira-db-js/issues"
+    "url": "https://github.com/mateusfreira/nun-db-js/issues"
   },
-  "homepage": "https://github.com/mateusfreira/freira-db-js#readme",
+  "homepage": "https://github.com/mateusfreira/nun-db-js#readme",
   "devDependencies": {
     "bdd-lazy-var": "^2.5.2",
     "chai": "^4.2.0",

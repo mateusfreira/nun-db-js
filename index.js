@@ -1,13 +1,13 @@
 (function(root, factory) {
   if (typeof define === 'function' && define.amd) {
     // AMD. Register as an anonymous module.
-    define(['freira-db'], factory);
+    define(['nun-db'], factory);
   } else if (typeof module === 'object' && module.exports) {
     // Node.
-    module.exports = factory(root.FreiraDb);
+    module.exports = factory(root.NunDb);
   } else {
     // Browser globals (root is window)
-    root.FreiraDb = factory(root.FreiraDb);
+    root.NunDb = factory(root.NunDb);
   }
 }(typeof self !== 'undefined' ? self : this, function(b) {
   const _webSocket = typeof WebSocket != 'undefined' ? WebSocket : require('websocket').w3cwebsocket;
@@ -20,8 +20,10 @@
     db._connection.onclose = db._onClose.bind(db);
     db._connectionListener = connectionListener;
   }
-  class FreiraDb {
+  class NunDb {
     constructor(dbUrl, user = "", pwd = "", db, token) {
+      this._start = Date.now();
+      this._messages = 0;
       this._databaseUrl = dbUrl;
       this.connect();
       this._watchers = {};
@@ -60,9 +62,14 @@
       }
     }
 
+    nextMessageId(){
+      this._messages += 1;
+      return this._start + this._messages;
+    }
+
     setValue(name, value) {
       const objValue = {
-        _id: Date.now(),
+        _id: this.nextMessageId(),
         value
       };
       this._ids.push(objValue._id);
@@ -150,6 +157,10 @@
       this._connectionListener.authFail();
     }
 
+    _errorHandler(error) {
+      console.log(`Todo implement error handler ${error}`)
+    }
+
     _changedHandler(event) {
       const [name, value] = event.split(/\s(.+)/);
       const watchers = this._watchers[name] || [];
@@ -168,6 +179,6 @@
       });
     }
   }
-  return FreiraDb;
+  return NunDb;
 }));
 

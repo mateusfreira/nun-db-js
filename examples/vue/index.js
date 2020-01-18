@@ -1,6 +1,6 @@
-//const freira = new FreiraDb('ws://127.0.0.1:3012');
-const freira = new FreiraDb('ws://127.0.0.1:3012', "mateus", "mateus", "vue", "vue_pwd");
-//const freira = new FreiraDb('ws://45.56.110.92:3012', "mateus", "mateus", "vue", "vue_pwd");
+//const nun = new NunDb('ws://127.0.0.1:3012');
+const nun = new NunDb('ws://127.0.0.1:3012', "mateus", "mateus", "vue", "vue_pwd");
+//const nun = new NunDb('ws://45.56.110.92:3012', "mateus", "mateus", "vue", "vue_pwd");
 // The raw data to observe
 var initialStats = [{
     label: 'A',
@@ -33,9 +33,9 @@ var initialStats = [{
 ];
 let send = true;
 const setState = state => {
-  send && freira && freira.setValue('state', state);
+  send && nun && nun.setValue('state', state);
 };
-freira.getValue('state').catch(() => {}).then(stats => {
+nun.getValue('state').catch(() => {}).then(stats => {
   stats = stats || initialStats;
   // A resusable polygon graph component
   Vue.component('polygraph', {
@@ -98,7 +98,7 @@ freira.getValue('state').catch(() => {}).then(stats => {
       stats: stats
     },
     mounted: function() {
-      freira.watch('state', event => {
+      nun.watch('state', event => {
         send = false;
         this.stats = event.value;
       });

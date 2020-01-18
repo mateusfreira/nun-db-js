@@ -1,11 +1,9 @@
-const freira = new FreiraDb('ws://45.56.110.92:3012');
+const nun = new NunDb('ws://45.56.110.92:3012');
 
-
-describe('Freira Db should', () => {
 
   it('should set value to a key', () => {
     const now = Date.now();
-    return freira.setValue('some', now).then(() => freira.getValue('some'))
+    return nun.setValue('some', now).then(() => nun.getValue('some'))
       .then(value => {
         expect(value).to.be.equal(now);
       });
@@ -20,16 +18,16 @@ describe('Freira Db should', () => {
       });
     };
 
-    const freira2 = new FreiraDb('ws://45.56.110.92:3012');
-    freira2.watch('some', ({
+    const nun2 = new NunDb('ws://45.56.110.92:3012');
+    nun2.watch('some', ({
       value
     }) => {
       values.push(value);
     });
     return wait().then(() => Promise.all([
-        freira.setValue('some', 1),
-        freira.setValue('some', 2),
-        freira.setValue('some', 3)
+        nun.setValue('some', 1),
+        nun.setValue('some', 2),
+        nun.setValue('some', 3)
       ]))
       .then(() => wait()).then(() => {
         expect(values.length).to.be.equals(3);
