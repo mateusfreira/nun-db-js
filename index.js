@@ -52,9 +52,9 @@
     }
 
     messageHandler(message) {
-      const messageParts = message.data.split(/\s(.+)/);
+      const messageParts = message.data.split(/\s(.+)|\n/);
       const [command, value] = messageParts;
-      const methodName = `_${command}Handler`;
+      const methodName = `_${command.trim()}Handler`;
       if (this[methodName]) {
         this[methodName](value);
       } else {
@@ -77,6 +77,13 @@
         this._connection.send(`set ${name} ${JSON.stringify(objValue, null, 0)}`);
       });
     }
+
+    createDb(name, token) {
+      return this._checkConnectionReady().then(() => {
+        this._connection.send(`create-db ${name} ${token}`);
+      });
+    }
+
 
     auth(user, pwd) {
       this._connection && this._connection.send(`auth ${user} ${pwd}`);
@@ -158,7 +165,10 @@
     }
 
     _errorHandler(error) {
-      console.log(`Todo implement error handler ${error}`)
+      console.log(`Todo implement error handler ${error}`);
+    }
+    _okHandler() {
+      //@todo resouve and promise if pedding
     }
 
     _changedHandler(event) {

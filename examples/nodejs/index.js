@@ -17,4 +17,6 @@ function a() {
 }
 
 a();
-
+for (var i = 0, len = 100; i < len; i++) {
+  const db = new NunDb('ws://127.0.0.1:3012', "mateus", "mateus", "mateus", "mateus_pwd");
+}
