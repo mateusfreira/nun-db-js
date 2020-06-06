@@ -1,6 +1,4 @@
-//const nun = new NunDb('ws://127.0.0.1:3012');
-const nun = new NunDb('ws://127.0.0.1:3012', "mateus", "mateus", "vue", "vue_pwd");
-//const nun = new NunDb('ws://45.56.110.92:3012', "mateus", "mateus", "vue", "vue_pwd");
+const nun = new NunDb('wss:/nun-db.vilarika.com.br', "mateus", "mateus", "vue", "vue_pwd");
 // The raw data to observe
 var initialStats = [{
     label: 'A',

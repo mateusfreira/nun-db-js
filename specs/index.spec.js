@@ -1,5 +1,5 @@
-const nun = new NunDb('ws://45.56.110.92:3012');
-
+const nun = new NunDb('ws://localhost:3012', "mateus", "mateus", "sample", "sample-pwd");
+describe('Nun-db test', () => {
 
   it('should set value to a key', () => {
     const now = Date.now();
@@ -18,7 +18,7 @@ const nun = new NunDb('ws://45.56.110.92:3012');
       });
     };
 
-    const nun2 = new NunDb('ws://45.56.110.92:3012');
+    const nun2 = new NunDb('ws://localhost:3012', "mateus", "mateus", "sample", "sample-pwd");
     nun2.watch('some', ({
       value
     }) => {

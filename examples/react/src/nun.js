@@ -1,10 +1,9 @@
 import NunDb from 'nun-db';
-//const nun = new NunDb('ws://45.56.110.92:3012', "mateus", "mateus", "react", "react_pwd");
-const nun = new NunDb('ws://127.0.0.1:3012', "mateus", "mateus", "react", "react_pwd");
+const nun = new NunDb('wss:/nun-db.vilarika.com.br', "mateus", "mateus", "react", "react_pwd");
 
 let ignore = false;
 const dbMiddleware = store => {
-  nun.watch('lastevent', action => {
+  nun.watch('lastEvent', action => {
     ignore = true;
     store.dispatch(action.value);
   });

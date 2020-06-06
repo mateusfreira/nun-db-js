@@ -17,7 +17,7 @@ export default function todos(state = initialState, action) {
       return [
         ...state,
         {
-          id: Date.now(),
+          id: state.length,
           completed: false,
           text: action.text
         }
