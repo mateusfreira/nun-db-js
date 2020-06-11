@@ -1,4 +1,4 @@
-const nun = new NunDb('ws://localhost:3012', "mateus", "mateus", "sample", "sample-pwd");
+const nun = new NunDb('wss://nun-db.vilarika.com.br',"sample", "sample-pwd");
 describe('Nun-db test', () => {
 
   it('should set value to a key', () => {
@@ -14,11 +14,11 @@ describe('Nun-db test', () => {
     const values = [];
     const wait = time => {
       return new Promise(resolve => {
-        setTimeout(resolve, time || 500);
+        setTimeout(resolve, time || 800);
       });
     };
 
-    const nun2 = new NunDb('ws://localhost:3012', "mateus", "mateus", "sample", "sample-pwd");
+    const nun2 = new NunDb('wss://nun-db.vilarika.com.br', "sample", "sample-pwd");
     nun2.watch('some', ({
       value
     }) => {

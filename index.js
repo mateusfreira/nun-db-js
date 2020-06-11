@@ -28,17 +28,28 @@
       this.connect();
       this._watchers = {};
       this._ids = [];
-      this._user = user;
-      this._pwd = pwd;
-      this._db = db;
-      this._token = token;
+
+      if (!db && !token) {
+        this._db = user;
+        this._token = pwd;
+      } else {
+        this._user = user;
+        this._pwd = pwd;
+        this._db = db;
+        this._token = token;
+      }
     }
     connect() {
       this._connectionPromise = new Promise((resolve, reject) => {
         this._connection = new _webSocket(this._databaseUrl);
         setupEvents(this, {
           connectReady: () => {
-            this.auth(this._user, this._pwd);
+            if (this._user && this._pwd)
+              this.auth(this._user, this._pwd);
+            else {
+              this.useDb(this._db, this._token);
+              resolve();
+            }
           },
           authSuccess: () => {
             this.useDb(this._db, this._token);
