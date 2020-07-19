@@ -1,22 +1,20 @@
 const NunDb = require('../../index.js');
-const db = new NunDb('ws://127.0.0.1:3012', "mateus", "mateus", "mateus", "mateus_pwd");
+const db = new NunDb('wss://ws.nundb.org/', "test", "test-pwd");
+const db1 = new NunDb('wss://ws.nundb.org/', "test", "test-pwd");
 
 function a() {
 
-  db.watch('jose', event => {
+  db1.watch('jose', event => {
     console.log('Received', Date.now() - event.value.send);
   });
-  for (var i = 0, len = 100000; i < len; i++) {
+  for (var i = 0, len = 10000; i < len; i++) {
     //console.log(i);
     setTimeout(() => {
       db.setValue('jose', {
         send: Date.now()
-      });
+      }).catch(console.log);
     }, i);
   }
 }
 
 a();
-for (var i = 0, len = 100; i < len; i++) {
-  const db = new NunDb('ws://127.0.0.1:3012', "mateus", "mateus", "mateus", "mateus_pwd");
-}

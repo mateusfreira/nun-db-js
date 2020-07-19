@@ -1,5 +1,5 @@
-// const nun = new NunDb('wss://nun-db.vilarika.com.br', "mateus", "mateus", "vue", "vue_pwd");
-const nun = new NunDb('ws://localhost:3012', "vue", "vue_pwd");
+const nun = new NunDb('wss://ws.nundb.org', "vue", "vue-pwd");
+//const nun = new NunDb('ws://localhost:3058', "vue", "vue_pwd");
 // The raw data to observe
 var initialStats = [{
     label: 'A',

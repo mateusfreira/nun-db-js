@@ -59,7 +59,7 @@
           connectionError: reject
         });
       });
-      return this._connectionPromise.then(() => (this._connected = true));
+      return this._connectionPromise.then(() => (this._connected = true)).catch(console.error);
     }
 
     messageHandler(message) {
