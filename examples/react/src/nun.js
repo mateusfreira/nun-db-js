@@ -1,5 +1,5 @@
 import NunDb from 'nun-db';
-const nun = new NunDb('wss:/nun-db.vilarika.com.br', "mateus", "mateus", "react", "react_pwd");
+const nun = new NunDb('wss://ws.nundb.org', "react", "react-pwd");
 
 let ignore = false;
 const dbMiddleware = store => {
