@@ -116,6 +116,17 @@
       });
     }
 
+    keys() {
+      return this._checkConnectionReady().then(() => {
+        this._connection.send('keys');
+        const pendingPromise = new Promise((resolve, reject) => {
+          this.pedingResolve = resolve;
+          this.pedingReject = reject;
+        });
+        return pendingPromise;
+      });
+    }
+
     _onError(connectionListener, error) {
       if (this._connected) {
         console.error(`WS error`, error);
@@ -160,6 +171,16 @@
     _valueHandler(value) {
       try {
         this.pedingResolve && this.pedingResolve(JSON.parse(value).value);
+      } catch (e) {
+        this.pedingReject && this.pedingReject(e);
+      }
+      delete this.pedingResolve;
+      delete this.pedingReject;
+    }
+
+    _keysHandler(keys) {
+      try {
+        this.pedingResolve && this.pedingResolve(keys.split(',').filter(_ => _));
       } catch (e) {
         this.pedingReject && this.pedingReject(e);
       }
