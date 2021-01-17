@@ -25,14 +25,28 @@ describe('Nun-db test', () => {
       values.push(value);
     });
     return wait().then(() => Promise.all([
-        nun.setValue('some', 1),
-        nun.setValue('some', 2),
-        nun.setValue('some', 3)
-      ]))
+      nun.setValue('some', 1),
+      nun.setValue('some', 2),
+      nun.setValue('some', 3)
+    ]))
       .then(() => wait()).then(() => {
         expect(values.length).to.be.equals(3);
         expect(values).to.be.deep.equals([1, 2, 3]);
       });
   });
+
+  it('should get the keys from the db', () => {
+    return Promise.all([
+      nun.setValue('some2', 1),
+      nun.setValue('some1', 1),
+      nun.setValue('some2', 1)
+    ]).then(()=>{
+        return nun.keys()
+      }).then(keys => {
+        expect(keys.length).to.be.equals(3);
+        expect(keys).to.be.deep.equals(["some", "some1", "some2"]);
+      });
+  });
 });
+
 
