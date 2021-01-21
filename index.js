@@ -12,6 +12,7 @@
 }(typeof self !== 'undefined' ? self : this, function(b) {
   const _webSocket = typeof WebSocket != 'undefined' ? WebSocket : require('websocket').w3cwebsocket;
   const RECONNECT_TIME = 1000;
+  const EMPTY = '<Empty>';
 
   function setupEvents(db, connectionListener) {
     db._connection.onmessage = db.messageHandler.bind(db);
@@ -73,7 +74,7 @@
       }
     }
 
-    nextMessageId(){
+    nextMessageId() {
       this._messages += 1;
       return this._start + this._messages;
     }
@@ -170,7 +171,8 @@
 
     _valueHandler(value) {
       try {
-        this.pedingResolve && this.pedingResolve(JSON.parse(value).value);
+        const valueToSend = value !== EMPTY ? (JSON.parse(value).value) : null;
+        this.pedingResolve && this.pedingResolve(valueToSend);
       } catch (e) {
         this.pedingReject && this.pedingReject(e);
       }
