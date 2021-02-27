@@ -54,4 +54,3 @@ db.setValue('someKey', 'someValue1');
 
 ```
 
-

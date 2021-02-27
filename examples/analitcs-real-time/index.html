@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <style type="text/css" media="screen">
+    #online{
+      margin: auto;
+      width: 400px;
+      border: 3px solid black;
+      padding: 10px;
+      text-align: center;
+      font-size: 45px;
+    }
+    </style>
+
+  </head>
+  <body>
+    <div id="online">
+      User online : <span id="online-users"> 1 </span>
+    </div>
+    <script charset="utf-8" src="../../index.js"></script>
+    <script charset="utf-8">
+      const nun = new NunDb('ws://localhost:3012', "analitcs", "analitcs_pwd");
+       nun.watch("$connections", (event) => {
+          document.getElementById('online-users').innerHTML = event.value;
+       }, true);
+    </script>
+  </body>
+</html>

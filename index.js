@@ -157,13 +157,19 @@
       return this._connectionPromise;
     }
 
-    watch(name, callback) {
+    watch(name, callback, currentValue) {
       return this._checkConnectionReady().then(() => {
         this._connection.send(`watch ${name}`);
         this._watchers[name] = this._watchers[name] || [];
         this._watchers[name].push(callback);
+        currentValue && this.getValue(name).then(value => callback({
+          name,
+          value
+        }));
+
       });
     }
+
     _rewatch() {
       const keysToWatch = Object.keys(this._watchers);
       keysToWatch.forEach(key => this._connection.send(`watch ${key}`));
@@ -171,7 +177,8 @@
 
     _valueHandler(value) {
       try {
-        const valueToSend = value !== EMPTY ? (JSON.parse(value).value) : null;
+        const jsonValue = JSON.parse(value);
+        const valueToSend = value !== EMPTY ? (jsonValue.value || jsonValue) : null;
         this.pedingResolve && this.pedingResolve(valueToSend);
       } catch (e) {
         this.pedingReject && this.pedingReject(e);
@@ -214,7 +221,7 @@
           if (this._ids.indexOf(parsedValue._id) === -1) {
             watcher({
               name,
-              value: parsedValue.value
+              value: parsedValue.value || parsedValue
             });
           }
         } catch (e) {
