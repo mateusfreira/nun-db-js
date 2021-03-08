@@ -177,8 +177,8 @@
 
     _valueHandler(value) {
       try {
-        const jsonValue = JSON.parse(value);
-        const valueToSend = value !== EMPTY ? (jsonValue.value || jsonValue) : null;
+        const jsonValue = value !== EMPTY ? JSON.parse(value) : null;
+        const valueToSend = jsonValue ? jsonValue.value : null;
         this.pedingResolve && this.pedingResolve(valueToSend);
       } catch (e) {
         this.pedingReject && this.pedingReject(e);
