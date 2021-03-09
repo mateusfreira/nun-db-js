@@ -44,8 +44,8 @@ describe('Nun-db test', () => {
     ]).then(() => {
       return nun.keys();
     }).then(keys => {
-      expect(keys.length).to.be.equals(4);
-      expect(keys.sort()).to.be.deep.equals(['some', 'some1', 'some2', 'some3']);
+      expect(keys.length).to.be.equals(5);
+      expect(keys.sort()).to.be.deep.equals(['$connections', 'some', 'some1', 'some2', 'some3']);
     });
   });
 
@@ -55,6 +55,26 @@ describe('Nun-db test', () => {
     ]).then(values => {
       expect(values[0]).to.be.equals(null);
     });
+  });
+
+  it('should return empty if the key does not exists', () => {
+    return nun.getValue('$connections').then(value => {
+      expect(value).to.be.gt(1);
+    });
+  });
+
+  it('should return value with a value key', () => {
+
+    return nun.setValue('some', {
+        value: 'some'
+      })
+      .then(() => {
+        return nun.getValue('some').then(value => {
+          expect(value).deep.equals({
+            value: 'some'
+          });
+        });
+      });
   });
 });
 
