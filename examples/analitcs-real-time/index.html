@@ -22,9 +22,14 @@
     </div>
     <script charset="utf-8" src="../../index.js"></script>
     <script charset="utf-8">
-      const nun = new NunDb('ws://localhost:3012', "analitcs", "analitcs_pwd");
+       const nun = new NunDb('wss://ws.nundb.org', "analitcs-blog", "analitcs-blog-2903uyi9ewrj")
        nun.watch("$connections", (event) => {
           document.getElementById('online-users').innerHTML = event.value;
+       }, true);
+
+       const nunAdmin = new NunDb('ws://localhost:3012', "$admin", "mateus")
+       nunAdmin.keys("$keys").then((event) => {
+        console.log(event);
        }, true);
     </script>
   </body>
