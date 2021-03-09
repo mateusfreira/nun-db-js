@@ -19,15 +19,15 @@ describe('Nun-db test', () => {
     };
 
     const nun2 = new NunDb('wss://ws.nundb.org', "sample", "sample-pwd");
-    nun2.watch('some1', ({
+    nun2.watch('some', ({
       value
     }) => {
       values.push(value);
     });
     return wait().then(() => Promise.all([
-        nun.setValue('some1', 1),
-        nun.setValue('some1', 2),
-        nun.setValue('some1', 3)
+        nun.setValue('some', 1),
+        nun.setValue('some', 2),
+        nun.setValue('some', 3)
       ]))
       .then(() => wait()).then(() => {
         expect(values.length).to.be.equals(3);
