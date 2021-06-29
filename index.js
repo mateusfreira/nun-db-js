@@ -90,6 +90,16 @@
       });
     }
 
+    set(name, value) {
+      return this.setValue(name, value);
+    }
+
+    remove(name) {
+      return this._checkConnectionReady().then(() => {
+        this._connection.send(`remove ${name}`);
+      });
+    }
+
     createDb(name, token) {
       return this._checkConnectionReady().then(() => {
         this._connection.send(`create-db ${name} ${token}`);
@@ -217,11 +227,11 @@
       const watchers = this._watchers[name] || [];
       watchers.forEach(watcher => {
         try {
-          const parsedValue = JSON.parse(value);
-          if (this._ids.indexOf(parsedValue._id) === -1) {
+          const parsedValue = value !== EMPTY ? JSON.parse(value) : null;
+          if (!parsedValue || this._ids.indexOf(parsedValue._id) === -1) {
             watcher({
               name,
-              value: parsedValue.value || parsedValue
+              value: parsedValue && parsedValue.value || parsedValue
             });
           }
         } catch (e) {

@@ -21,6 +21,7 @@ const NunDb = require('nun-db');
 const db = new NunDb('wss://ws.nundb.org/', 'db-name', 'db-token');
 
 db.setValue('someKey', 'someValue');
+db.set('someKey', 'someValue');//Alias to setValue
 
 // get a key
 db.getValue('someKey').then( value => {
