@@ -1,35 +1,77 @@
-# Redux TodoMVC Example
+# Making Redux TodoMVC Example a realtime multiuser app with Nun-db
 
-This project template was built with [Create React App](https://github.com/facebookincubator/create-react-app), which provides a simple way to start React projects with no build configuration needed.
+This project is a copy and past of https://github.com/reduxjs/redux/tree/master/examples/todomvc + adding Nun-db as a database that makes it Realtime and durable.
 
-Projects built with Create-React-App include support for ES6 syntax, as well as several unofficial / not-yet-final forms of Javascript syntax such as Class Properties and JSX. See the list of [language features and polyfills supported by Create-React-App](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md#supported-language-features-and-polyfills) for more information.
+Little changes are needed for doing that. (And I also believe this is true for any other Redux like projects)
 
-## Available Scripts
+I will list the changes we have made.
 
-In the project directory, you can run:
+## Installed Nun-db in  the project
 
-### `npm start`
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+```bash
+npm install nun-db
+```
 
-The page will reload if you make edits.<br>
-You will also see any lint errors in the console.
+## Added Nun-db middleware
 
-### `npm run build`
+[Code here](https://github.com/mateusfreira/nun-db-js/blob/master/examples/react/src/nun.js)
 
-Builds the app for production to the `build` folder.<br>
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```js
+import NunDb from 'nun-db';//import nundb
+const nun = new NunDb('wss://ws.nundb.org', "react", "react-pwd");//connect to your database
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+const dbMiddleware = store => {
+	//watch events from other users
+	//If you watch the events you don't need to watch the state
+    nun.watch('lastEvent', action => {
+        const actionToTrigger = { ignoreSave: true, ...action.value};//add ignoreSave to avoid infinity loop
+        store.dispatch(actionToTrigger);//replicate the event in the current store
+    });
+    nun.getValue('lastState').then(state => {//In the first load you load the last state from the database
+        store.dispatch({ type: 'newState', state   });//trigger the event to update all the state
+    });
+    return next => (action) => {
+        next(action);
+        if(!action.ignoreSave) {//avoid infinity loop on saving
+            nun.setValue('lastEvent', action);//replicate the current event to other clients
+            nun.setValue('lastState', store.getState());//save last state
+        }
+    };
+};
 
-### `npm run eject`
+export {
+    nun,
+    dbMiddleware
+};
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-Instead, it will copy all the configuration files and the transitive dependencies (Webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Added Nun-db middleware to the store
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+[Code here](https://github.com/mateusfreira/nun-db-js/blob/master/examples/react/src/index.js#L7)
+
+```js
+import { dbMiddleware  } from './nun'
+const store = createStore(reducer, applyMiddleware(dbMiddleware));
+```
+
+## Add event to update all the state in the first load
+
+[Code here](https://github.com/mateusfreira/nun-db-js/blob/master/examples/react/src/reducers/todos.js#L14)
+
+```js
+export default function todos(state = initialState, action) {
+  switch (action.type) {
+    case 'newState':
+      return action.state.todos;
+//...
+```
+
+
+# That is all....
+
+This is all I did now the app is Realtime, durable and with little changes to the code ... 
+Hope it helps you to do the same on your app, if not don't  left us an issue we will be happy to make is work on your app.
+
