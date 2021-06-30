@@ -1,8 +1,8 @@
-# Making Redux TodoMVC Example a realtime multiuser app with Nun-db
+# Making Redux TodoMVC Example a real-time multiuser app with Nun-db
 
-This project is a copy and past of https://github.com/reduxjs/redux/tree/master/examples/todomvc + adding Nun-db as a database that makes it Realtime and durable.
+In this tutorial, we will show how to add Nun-db to an already existent react/redux app. It is a copy and paste of https://github.com/reduxjs/redux/tree/master/examples/todomvc + adding [Nun-db](https://github.com/mateusfreira/nun-db) as a database that makes it real-time and durable.
 
-We need to do little changes for that. (And I also believe this is true for any other Redux like projects)
+We need to make little changes to that. (And I also believe this is true for any other Redux like projects)
 
 I will list the changes we have made.
 
@@ -29,9 +29,13 @@ npm i
 ```bash
 npm start
 ```
->>>>>>>>>>>>>>>>>>Image 1 here<<<<<<<<<<<<<<<<<<<<<<<<<
 
-At this point the app with be running without any persistence, if you reload the app add data come back to the default state. Now the fun starts.
+
+
+
+At this point, the app with be running without any persistence. If you reload the app, add data come back to the default state. Now the fun starts.
+
+![App running](https://user-images.githubusercontent.com/234049/123936589-b2d58d80-d96b-11eb-8a25-cf9aeed370dd.png)
 
 
 ## Run nun-db server in docker
@@ -51,7 +55,7 @@ docker exec -it nun-test  /bin/sh -c "nun-db -u user-name -p user-pwd create-db 
 # Response "valid auth\n;create-db success\n"
 ```
 
-Now back to the js project...
+Now back to the js project.
 
 ## Installed Nun-db in the project
 
@@ -65,7 +69,7 @@ npm install nun-db
 [Code here](https://github.com/mateusfreira/nun-db-js/blob/master/examples/react/src/nun.js)
 
 ```bash 
-# Use your favorite text editor
+# Use your favorite text editor,
 vim src/nun.js
 ```
 
@@ -110,9 +114,10 @@ import { dbMiddleware  } from './nun'
 const store = createStore(reducer, applyMiddleware(dbMiddleware));
 ```
 
-Reload the page and check the network console tab to make sure the database connected as expected.
+Reload the page and check the network console tab to make sure the database connection as expected.
 
--------------------- image 2 ------------------------------
+
+![Network tab](https://user-images.githubusercontent.com/234049/123936745-ddbfe180-d96b-11eb-8f7b-ba1a03516561.png)
 
 ## Add event to update all the state in the first load
 
@@ -129,14 +134,14 @@ export default function todos(state = initialState, action) {
 ....
 //...
 ```
-Done your app is already working with Nun-db. Now to see the magic happening open the same page in another computer or browser to see how changing one place will reflect immediate in the other.
-In summary all you need it the next changes (git diff)..
+Done your app is already working with Nun-db. Now to see the magic happening, open the same page in another computer or browser to see how changing one place will reflect immediately in the other.
+In summary, all you need is the following changes (git diff).
 
--------------------- image 3 ------------------------------
+![post-print3](https://user-images.githubusercontent.com/234049/123936905-034ceb00-d96c-11eb-8723-f887c0265594.png)
 
 And adding the nun.js to the `src` folder as shown in this post...
 Happy hacking!!!
 
-This is all I did and now the app is Realtime, durable and with little changes to the code ... 
-Hope it helps you to do the same on your app, if not don't  left us an issue we will be happy to make is work on your app.
+This is all I did, and now the app is real-time, durable, and with minor changes to the code. 
+I hope it helps you to do the same on your app. If not, don't leave us an [issue](https://github.com/mateusfreira/nun-db/issues). We will be happy to make it work on your app.
 
