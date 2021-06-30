@@ -1,30 +1,30 @@
 # Making Redux TodoMVC Example a real-time multiuser app with Nun-db
 
-In this tutorial, we will show how to add Nun-db to an already existent react/redux app. It is a copy and paste of https://github.com/reduxjs/redux/tree/master/examples/todomvc + adding [Nun-db](https://github.com/mateusfreira/nun-db) as a database that makes it real-time and durable.
+In this tutorial, we will show how to add Nun-db to an already existent react/redux app. This project is a copy and paste of https://github.com/reduxjs/redux/tree/master/examples/todomvc + adding [Nun-db](https://github.com/mateusfreira/nun-db) as a database that makes it real-time and durable.
 
-We need to make little changes to that. (And I also believe this is true for any other Redux like projects)
+We need to make little archive that goal. (And I also believe this is true for any other Redux like projects)
 
-I will list the changes we have made.
+Next I will list the changes we have made.
 
-## Clone redux samples
+##  1. Clone redux samples
 
 ```bash
 git clone git@github.com:reduxjs/redux.git
 ```
 
-## Go to the examples folder
+## 2. Go to the examples folder
 
 ```bash
 cd redux/examples/todomvc
 ```
 
-## Install all modules
+## 3. Install all modules
 
 ```bash 
 npm i
 ```
 
-## Start the dev app 
+## 4. Start the dev app 
 
 ```bash
 npm start
@@ -38,7 +38,7 @@ At this point, the app with be running without any persistence. If you reload th
 ![App running](https://user-images.githubusercontent.com/234049/123936589-b2d58d80-d96b-11eb-8a25-cf9aeed370dd.png)
 
 
-## Run nun-db server in docker
+## 5. Run nun-db server in docker
 
 In a different terminal
 
@@ -47,7 +47,7 @@ docker run --env NUN_USER=user-name --env NUN_PWD=user-pwd -it --rm -p 3013:3013
 
 ```
 
-### Create the nun database
+### 6. Create the nun database
 
 ```
 docker exec -it nun-test  /bin/sh -c "nun-db -u user-name -p user-pwd create-db -d react-db -t reac-db-pwd"
@@ -57,14 +57,14 @@ docker exec -it nun-test  /bin/sh -c "nun-db -u user-name -p user-pwd create-db 
 
 Now back to the js project.
 
-## Installed Nun-db in the project
+## 7. Installed Nun-db in the project
 
 
 ```bash
 npm install nun-db
 ```
 
-## Added Nun-db middleware
+## 8. Added Nun-db middleware
 
 [Code here](https://github.com/mateusfreira/nun-db-js/blob/master/examples/react/src/nun.js)
 
@@ -101,7 +101,7 @@ export {
 ```
 
 
-## Added Nun-db middleware to the store in the index.js
+## 9 Added Nun-db middleware to the store in the index.js
 
 [Code here](https://github.com/mateusfreira/nun-db-js/blob/master/examples/react/src/index.js#L7)
 
@@ -114,12 +114,12 @@ import { dbMiddleware  } from './nun'
 const store = createStore(reducer, applyMiddleware(dbMiddleware));
 ```
 
-Reload the page and check the network console tab to make sure the database connection as expected.
+Reload the page and check the network console tab to make sure the database connected as expected.
 
 
 ![Network tab](https://user-images.githubusercontent.com/234049/123936745-ddbfe180-d96b-11eb-8f7b-ba1a03516561.png)
 
-## Add event to update all the state in the first load
+## 10. Add event to update all the state in the first load
 
 [Code here](https://github.com/mateusfreira/nun-db-js/blob/master/examples/react/src/reducers/todos.js#L14)
 

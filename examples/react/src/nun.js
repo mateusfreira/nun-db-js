@@ -3,7 +3,7 @@ const nun = new NunDb('wss://ws.nundb.org', "react", "react-pwd");
 
 const dbMiddleware = store => {
     nun.watch('lastEvent', action => {
-        const actionToTrigger = { ignoreSave: true, ...action.value}
+        const actionToTrigger = { ignoreSave: true, ...action.value};
         store.dispatch(actionToTrigger);
     });
     nun.getValue('lastState').then(state => {
