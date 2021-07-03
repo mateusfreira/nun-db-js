@@ -29,6 +29,7 @@
       this.connect();
       this._watchers = {};
       this._ids = [];
+      this._pendingPromises = [];
 
       if (!db && !token) {
         this._db = user;
@@ -90,6 +91,12 @@
       });
     }
 
+    increment(name, value = "") {
+      return this._checkConnectionReady().then(() => {
+        this._connection.send(`increment ${name} ${value}`);
+      });
+    }
+
     set(name, value) {
       return this.setValue(name, value);
     }
@@ -119,22 +126,26 @@
     getValue(name) {
       return this._checkConnectionReady().then(() => {
         this._connection.send(`get ${name}`);
-        const pendingPromise = new Promise((resolve, reject) => {
-          this.pedingResolve = resolve;
-          this.pedingReject = reject;
+        const pendingPromise = {};
+        pendingPromise.promise = new Promise((resolve, reject) => {
+          pendingPromise.pedingResolve = resolve;
+          pendingPromise.pedingReject = reject;
         });
-        return pendingPromise;
+        this._pendingPromises.push(pendingPromise);
+        return pendingPromise.promise;
       });
     }
 
     keys() {
       return this._checkConnectionReady().then(() => {
         this._connection.send('keys');
-        const pendingPromise = new Promise((resolve, reject) => {
-          this.pedingResolve = resolve;
-          this.pedingReject = reject;
+        const pendingPromise = {};
+        pendingPromise.promise = new Promise((resolve, reject) => {
+          pendingPromise.pedingResolve = resolve;
+          pendingPromise.pedingReject = reject;
         });
-        return pendingPromise;
+        this._pendingPromises.push(pendingPromise);
+        return pendingPromise.promise;
       });
     }
 
@@ -186,22 +197,22 @@
     }
 
     _valueHandler(value) {
+      const pendingPromise = this._pendingPromises.shift();
       try {
         const jsonValue = value !== EMPTY ? JSON.parse(value) : null;
         const valueToSend = jsonValue && jsonValue.value ? jsonValue.value : jsonValue;
-        this.pedingResolve && this.pedingResolve(valueToSend);
+        pendingPromise && pendingPromise.pedingResolve(valueToSend);
       } catch (e) {
-        this.pedingReject && this.pedingReject(e);
+        pendingPromise && pendingPromise.pedingReject(e);
       }
-      delete this.pedingResolve;
-      delete this.pedingReject;
     }
 
     _keysHandler(keys) {
+      const pendingPromise = this._pendingPromises.shift();
       try {
-        this.pedingResolve && this.pedingResolve(keys.split(',').filter(_ => _));
+        pendingPromise && pendingPromise.pedingResolve(keys.split(',').filter(_ => _));
       } catch (e) {
-        this.pedingReject && this.pedingReject(e);
+        pendingPromise && pendingPromise.pedingReject(e);
       }
       delete this.pedingResolve;
       delete this.pedingReject;
