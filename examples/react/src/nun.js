@@ -1,5 +1,5 @@
-import NunDb from 'nun-db';
-const nun = new NunDb('wss://ws.nundb.org', "react", "react-pwd");
+//import NunDb from 'nun-db';
+const nun = new window.NunDb('wss://ws.nundb.org', "react", "react-pwd");
 
 const dbMiddleware = store => {
     nun.watch('lastEvent', action => {
