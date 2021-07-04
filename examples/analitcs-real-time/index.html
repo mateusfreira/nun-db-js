@@ -52,10 +52,10 @@
        nun.watch("$connections", (event) => {
           document.getElementById('online-users').innerHTML = event.value;
        }, true);
-       nun.increment('visits');
-       nun.increment(`user_${userId}`);
-       nun.increment(`date_${dateStr.substr(0,10)}`);//Date
-       nun.increment(`page_${document.location.pathname}`);//Page
+       //nun.increment('visits');
+       //nun.increment(`user_${userId}`);
+       //nun.increment(`date_${dateStr.substr(0,10)}`);//Date
+       //nun.increment(`page_${document.location.pathname}`);//Page
     </script>
     <script src="./analitcs.js"></script>
 
