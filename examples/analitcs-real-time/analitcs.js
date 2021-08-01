@@ -138,3 +138,4 @@ nun.keys()
     document.getElementById('total-locations').innerHTML = `<ul>${locationData.splice(0,10).map(local => `<li><b>${local.label}</b> : ${local.value}</li>`).join("")}</ul>`;
   });
 
+
