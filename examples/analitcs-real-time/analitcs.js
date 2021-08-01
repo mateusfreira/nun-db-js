@@ -14,13 +14,13 @@ nun.keys()
       users: {
         keys: keys.filter(u => u.startsWith("user_")),
       },
-      languages: buildAnalitcsData(keys, "lang_"),
       pages: buildAnalitcsData(keys, "page_"),
       dates: buildAnalitcsData(keys.reverse(), "date_"),
+      languages: buildAnalitcsData(keys, "lang_"),
     };
     return Promise.all([data.pages, data.dates, data.users, data.languages]);
-  }).then(([_pagesData, _dateData, userData, languageData]) => {
-    console.log(languageData);
+  }).then(([_pagesData, _dateData, userData, _languageData]) => {
+    const languageData = _languageData.sort((p1, p2) => p2.value - p1.value);
     const dateData = _dateData.sort((p1, p2) => p1.key.localeCompare(p2.key));
     const pagesData = _pagesData.sort((p1, p2) => p2.value - p1.value);
     const options = {
@@ -132,6 +132,6 @@ nun.keys()
     const pageChart = new ApexCharts(document.querySelector("#page-chart"), pageOptions);
     pageChart.render();
     document.getElementById('total-users').innerHTML = userData.keys.length;
-    document.getElementById('total-languages').innerHTML = languageData.keys.length;
+    document.getElementById('total-languages').innerHTML = `<ul>${languageData.splice(0,10).map(lang => `<li><b>${lang.label}</b> : ${lang.value}</li>`).join("")}</ul>`;
   });
 
