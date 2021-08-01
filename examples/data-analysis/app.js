@@ -50,7 +50,7 @@ $(() => {
                         nunDb.setValue(confName, {})
                     ])
                     .then(() => {
-                        document.location.href = `/?dataset=${dsName}`
+                        document.location.href = `./?dataset=${dsName}`
                     });
             } catch (e) {
                 alert(`Invalid json dataset: ${e.message}`);

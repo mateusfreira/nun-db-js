@@ -14,14 +14,13 @@ nun.keys()
       users: {
         keys: keys.filter(u => u.startsWith("user_")),
       },
-      languages: {
-        keys: keys.filter(u => u.startsWith("lang_")),
-      },
+      languages: buildAnalitcsData(keys, "lang_"),
       pages: buildAnalitcsData(keys, "page_"),
       dates: buildAnalitcsData(keys.reverse(), "date_"),
     };
     return Promise.all([data.pages, data.dates, data.users, data.languages]);
   }).then(([_pagesData, _dateData, userData, languageData]) => {
+    console.log(languageData);
     const dateData = _dateData.sort((p1, p2) => p1.key.localeCompare(p2.key));
     const pagesData = _pagesData.sort((p1, p2) => p2.value - p1.value);
     const options = {
@@ -135,3 +134,4 @@ nun.keys()
     document.getElementById('total-users').innerHTML = userData.keys.length;
     document.getElementById('total-languages').innerHTML = languageData.keys.length;
   });
+
