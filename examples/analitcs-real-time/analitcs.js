@@ -17,9 +17,11 @@ nun.keys()
       pages: buildAnalitcsData(keys, "page_"),
       dates: buildAnalitcsData(keys.reverse(), "date_"),
       languages: buildAnalitcsData(keys, "lang_"),
+      locations: buildAnalitcsData(keys, "location_"),
     };
-    return Promise.all([data.pages, data.dates, data.users, data.languages]);
-  }).then(([_pagesData, _dateData, userData, _languageData]) => {
+    return Promise.all([data.pages, data.dates, data.users, data.languages, data.locations]);
+  }).then(([_pagesData, _dateData, userData, _languageData, _locationData]) => {
+    const locationData = _locationData.sort((p1, p2) => p2.value - p1.value);
     const languageData = _languageData.sort((p1, p2) => p2.value - p1.value);
     const dateData = _dateData.sort((p1, p2) => p1.key.localeCompare(p2.key));
     const pagesData = _pagesData.sort((p1, p2) => p2.value - p1.value);
@@ -133,5 +135,6 @@ nun.keys()
     pageChart.render();
     document.getElementById('total-users').innerHTML = userData.keys.length;
     document.getElementById('total-languages').innerHTML = `<ul>${languageData.splice(0,10).map(lang => `<li><b>${lang.label}</b> : ${lang.value}</li>`).join("")}</ul>`;
+    document.getElementById('total-locations').innerHTML = `<ul>${locationData.splice(0,10).map(local => `<li><b>${local.label}</b> : ${local.value}</li>`).join("")}</ul>`;
   });
 
