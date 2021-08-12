@@ -2,6 +2,8 @@ const charts = {};
 
 function run() {
   performance.mark('keys-start');
+  nun.watch("$connections", updateOnlineUsers, true);
+  nun.watch("visits", updateTotal, true);
   nun.keys()
     .then(keys => {
       performance.mark('keys-end');
@@ -11,8 +13,7 @@ function run() {
       buildAnalitcsData(keys.reverse(), "date_", showDateData);
       buildAnalitcsData(keys, "lang_", showLangData);
       buildAnalitcsData(keys, "location_", showLocationData);
-    }).then(() => {
-    });
+    }).then(() => {});
 }
 
 window.onload = () => {
@@ -105,6 +106,14 @@ function updateChart(chart, data) {
 
   });
 }
+
+function updateTotal(event) {
+  document.getElementById('total').innerHTML = event.value;
+};
+
+function updateOnlineUsers(event) {
+  document.getElementById('online-users').innerHTML = event.value;
+};
 
 function showPageData(_pagesData) {
   const pagesData = _pagesData.sort((p1, p2) => p2.value - p1.value);
