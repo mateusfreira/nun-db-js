@@ -1,36 +1,112 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>Index</title>
-    <style type="text/css" media="screen">
-    #online{
-      margin: auto;
-      width: 400px;
-      border: 3px solid black;
-      padding: 10px;
-      text-align: center;
-      font-size: 45px;
-    }
-    </style>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>Analitcs Nun-db</title>
+		<style type="text/css" media="screen">
+#online{
+	margin: auto;
+	width: 400px;
+	border: 0px solid black;
+	padding: 10px;
+	text-align: center;
+	font-size: 45px;
+}
+		</style>
 
-  </head>
-  <body>
-    <div id="online">
-      User online : <span id="online-users"> 1 </span>
-    </div>
-    <script charset="utf-8" src="https://cdn.jsdelivr.net/npm/nun-db@1.3.4/index.js"></script>
-    <script charset="utf-8">
-       const nun = new NunDb('wss://ws.nundb.org', "analitcs-blog", "analitcs-blog-2903uyi9ewrj")
-       nun.watch("$connections", (event) => {
-          document.getElementById('online-users').innerHTML = event.value;
-       }, true);
+		<link
+		rel="stylesheet"
+	href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+ />
 
-       const nunAdmin = new NunDb('ws://localhost:3012', "$admin", "mateus")
-       nunAdmin.keys("$keys").then((event) => {
-        console.log(event);
-       }, true);
-    </script>
-  </body>
+
+		<link
+		rel="stylesheet"
+	href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+ />
+
+		<link
+		rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+ />
+		<link
+		href="https://fonts.googleapis.com/css?family=Titillium+Web:400,600,700"
+	rel="stylesheet"
+ />
+		<link
+		rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+ />
+		<link
+		href="https://fonts.googleapis.com/css?family=Titillium+Web:400,600,700"
+	rel="stylesheet"
+ />
+		<script charset="utf-8" src="https://cdn.jsdelivr.net/npm/nun-db@1.4.1/index.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+		<script charset="utf-8" src="./nun.js" ></script>
+		<script src="./analitcs.js"></script>
+	</head>
+	<body class="d-flex flex-column h-100">
+		<main class="flex-shrink-0">
+			<div class="container px-4 py-5">
+				<h2 class="pb-2 border-bottom">Site analytics with nun-db</h2>
+				<div class="container">
+					<p>
+						<div id="online">
+							User online : <span id="online-users"> 1 </span>
+						</div>
+					</p>
+				</div>
+				<div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+					<div class="feature col">
+						<h2>
+							Page views by date
+						</h2>
+						<div id="chart">
+						</div>
+					</div>
+					<div class="feature col">
+						<h2>
+							Most viewed pages
+						</h2>
+						<div id="page-chart">
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="container px-4 py-5">
+			<div class="row">
+				<div class="col-sm-6">
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title">Users</h5>
+							<p class="card-text">Different Users access</p>
+							<p class="card-text" id="total-users"></p>
+						</div>
+					</div>
+				</div>
+				<div class="col-sm-6">
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title">Langages</h5>
+							<p class="card-text">Different languages</p>
+							<p class="card-text" id="total-languages"></p>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-6">
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title">Locations</h5>
+							<p class="card-text">Different Locations</p>
+							<p class="card-text" id="total-locations"></p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</main>
+	</body>
 </html>
