@@ -14,6 +14,14 @@
   const RECONNECT_TIME = 1000;
   const EMPTY = '<Empty>';
 
+  function storeLocalValue(key, value) {
+    localStorage.setItem(key, value);
+  }
+
+  function getLocalValue(key) {
+    localStorage.getItem(key);
+  }
+
   function setupEvents(db, connectionListener) {
     db._connection.onmessage = db.messageHandler.bind(db);
     db._connection.onopen = db._onOpen.bind(db, connectionListener);
@@ -128,7 +136,10 @@
         this._connection.send(`get ${name}`);
         const pendingPromise = {};
         pendingPromise.promise = new Promise((resolve, reject) => {
-          pendingPromise.pedingResolve = resolve;
+          pendingPromise.pedingResolve = (value) => {
+            storeLocalValue(name, value);
+            resolve(value);
+          };
           pendingPromise.pedingReject = reject;
         });
         this._pendingPromises.push(pendingPromise);
@@ -183,10 +194,21 @@
         this._connection.send(`watch ${name}`);
         this._watchers[name] = this._watchers[name] || [];
         this._watchers[name].push(callback);
-        currentValue && this.getValue(name).then(value => callback({
-          name,
-          value
-        }));
+        if (currentValue) {
+          const localValue = getLocalValue(name);
+          if (localValue) {
+            setTimeout(() =>
+              callback({
+                name,
+                value
+              })
+            );
+          }
+          this.getValue(name).then(value => callback({
+            name,
+            value
+          }));
+        }
 
       });
     }

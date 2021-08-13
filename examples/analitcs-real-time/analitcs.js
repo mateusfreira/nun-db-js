@@ -1,28 +1,57 @@
-function buildAnalitcsData(allKeys, prefix) {
-  const keys = allKeys.filter(u => u.startsWith(prefix));
-  const valueChain = keys.map(key => nun.getValue(key).then((value) => ({
-    key,
-    value,
-    label: key.replace(prefix, "")
-  })));
-  return Promise.all(valueChain);
+const charts = {};
+
+function run() {
+  performance.mark('keys-start');
+  nun.watch("$connections", updateOnlineUsers, true);
+  nun.watch("visits", updateTotal, true);
+  nun.keys()
+    .then(keys => {
+      performance.mark('keys-end');
+      performance.measure('keysMarker', 'keys-start', 'keys-end');
+      showUserData(keys.filter(u => u.startsWith("user_")));
+      buildAnalitcsData(keys, "page_", showPageData);
+      buildAnalitcsData(keys.reverse(), "date_", showDateData);
+      buildAnalitcsData(keys, "lang_", showLangData);
+      buildAnalitcsData(keys, "location_", showLocationData);
+    }).then(() => {});
 }
 
-nun.keys()
-  .then(keys => {
-    const data = {
-      users: {
-        keys: keys.filter(u => u.startsWith("user_")),
-      },
-      pages: buildAnalitcsData(keys, "page_"),
-      dates: buildAnalitcsData(keys.reverse(), "date_"),
-      languages: buildAnalitcsData(keys, "lang_"),
+window.onload = () => {
+  run();
+};
+
+
+function buildAnalitcsData(allKeys, prefix, plotFunction) {
+  const keys = allKeys.filter(u => u.startsWith(prefix));
+  const finalObject = {};
+  let count = 0;
+  performance.mark(`${prefix}_start`);
+  keys.map(key => nun.watch(key, ({
+    value
+  }) => {
+    count++;
+    finalObject[key] = {
+      value,
+      key,
+      label: key.replace(prefix, "")
     };
-    return Promise.all([data.pages, data.dates, data.users, data.languages]);
-  }).then(([_pagesData, _dateData, userData, _languageData]) => {
-    const languageData = _languageData.sort((p1, p2) => p2.value - p1.value);
-    const dateData = _dateData.sort((p1, p2) => p1.key.localeCompare(p2.key));
-    const pagesData = _pagesData.sort((p1, p2) => p2.value - p1.value);
+    if (count >= keys.length)
+      plotFunction && plotFunction(Object.values(finalObject));
+  }, true));
+  return Promise.resolve([]);
+}
+
+function showUserData(userData) {
+  document.getElementById('total-users').innerHTML = `<h2>${userData.length}</h2>`;
+  return userData;
+}
+
+function showDateData(_dateData) {
+
+  const dateData = _dateData.sort((p1, p2) => p1.key.localeCompare(p2.key));
+  if (charts.dateChart) {
+    updateChart(charts.dateChart, dateData);
+  } else {
     const options = {
       series: [{
         name: "Page virews",
@@ -58,8 +87,39 @@ nun.keys()
 
     const chart = new ApexCharts(document.querySelector("#chart"), options);
     chart.render();
+    charts.dateChart = chart;
+  }
+}
 
+function updateChart(chart, data) {
+  chart.updateSeries([{
+    data: data.map(_ => _.value)
+  }]);
+  chart.updateOptions({
+    xaxis: {
+      labels: {
+        rotate: -45
+      },
+      categories: data.map(p => p.label),
+      tickPlacement: 'on'
+    },
 
+  });
+}
+
+function updateTotal(event) {
+  document.getElementById('total').innerHTML = event.value;
+};
+
+function updateOnlineUsers(event) {
+  document.getElementById('online-users').innerHTML = event.value;
+};
+
+function showPageData(_pagesData) {
+  const pagesData = _pagesData.sort((p1, p2) => p2.value - p1.value);
+  if (charts.pageChart) {
+    updateChart(charts.pageChart, pagesData);
+  } else {
     const pageOptions = {
       series: [{
         name: 'Reads',
@@ -128,10 +188,19 @@ nun.keys()
         },
       }
     };
+    charts.pageChart = new ApexCharts(document.querySelector("#page-chart"), pageOptions);
+    charts.pageChart.render();
+  }
+  return pagesData;
+}
 
-    const pageChart = new ApexCharts(document.querySelector("#page-chart"), pageOptions);
-    pageChart.render();
-    document.getElementById('total-users').innerHTML = userData.keys.length;
-    document.getElementById('total-languages').innerHTML = `<ul>${languageData.splice(0,10).map(lang => `<li><b>${lang.label}</b> : ${lang.value}</li>`).join("")}</ul>`;
-  });
+function showLangData(_languageData) {
+  const languageData = _languageData.sort((p1, p2) => p2.value - p1.value);
+  document.getElementById('total-languages').innerHTML = `<h2>${languageData.length}</h2><ul>${languageData.splice(0,10).map(lang => `<li><b>${lang.label}</b> : ${lang.value}</li>`).join("")}</ul>`;
+}
+
+function showLocationData(_locationData) {
+  const locationData = _locationData.sort((p1, p2) => p2.value - p1.value);
+  document.getElementById('total-locations').innerHTML = `<h2>${locationData.length}</h2><ul>${locationData.splice(0,10).map(local => `<li><b>${local.label}</b> : ${local.value}</li>`).join("")}</ul>`;
+}
 
