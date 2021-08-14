@@ -10,16 +10,21 @@
     root.NunDb = factory(root.NunDb);
   }
 }(typeof self !== 'undefined' ? self : this, function(b) {
+  const shouldSoreLocal = typeof localStorage !== 'undefined';
   const _webSocket = typeof WebSocket != 'undefined' ? WebSocket : require('websocket').w3cwebsocket;
   const RECONNECT_TIME = 1000;
   const EMPTY = '<Empty>';
 
   function storeLocalValue(key, value) {
-    localStorage.setItem(key, value);
+    if (shouldSoreLocal) {
+      localStorage.setItem(`nundb_${key}`, JSON.stringify(value));
+    }
   }
 
   function getLocalValue(key) {
-    localStorage.getItem(key);
+    if (shouldSoreLocal) {
+      return JSON.parse(localStorage.getItem(`nundb_${key}`));
+    }
   }
 
   function setupEvents(db, connectionListener) {
@@ -200,17 +205,18 @@
             setTimeout(() =>
               callback({
                 name,
-                value
+                value: localValue
               })
             );
           }
-          this.getValue(name).then(value => callback({
+          this.getValue(name).then(value => value != localValue && callback({
             name,
             value
           }));
         }
 
       });
+
     }
 
     _rewatch() {
