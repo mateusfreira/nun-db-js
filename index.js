@@ -209,7 +209,7 @@
               })
             );
           }
-          this.getValue(name).then(value => value != localValue && callback({
+          this.getValue(name).then(value => (!value || value != localValue) && callback({
             name,
             value
           }));
