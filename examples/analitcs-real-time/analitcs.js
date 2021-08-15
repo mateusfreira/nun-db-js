@@ -1,5 +1,7 @@
 const charts = {};
 
+const sortByValue = (a, b) => b.value - a.value;
+
 function run() {
   performance.mark('keys-start');
   nun.watch("$connections", updateOnlineUsers, true);
@@ -8,11 +10,11 @@ function run() {
     .then(keys => {
       performance.mark('keys-end');
       performance.measure('keysMarker', 'keys-start', 'keys-end');
-      showUserData(keys.filter(u => u.startsWith("user_")));
-      buildAnalitcsData(keys, "page_", showPageData);
-      buildAnalitcsData(keys.reverse(), "date_", showDateData);
-      buildAnalitcsData(keys, "lang_", showLangData);
-      buildAnalitcsData(keys, "location_", showLocationData);
+      showUserData(keys.filter(u => u.startsWith('user_')));
+      buildAnalitcsData(keys, 'page_', showPageData);
+      buildAnalitcsData(keys.reverse(), 'date_', showDateData);
+      buildAnalitcsData(keys, 'lang_', showLangData);
+      buildAnalitcsData(keys, 'location_', showLocationData);
     }).then(() => {});
 }
 
@@ -33,7 +35,7 @@ function buildAnalitcsData(allKeys, prefix, plotFunction) {
     finalObject[key] = {
       value,
       key,
-      label: key.replace(prefix, "")
+      label: key.replace(prefix, '')
     };
     if (count >= keys.length)
       plotFunction && plotFunction(Object.values(finalObject));
@@ -47,14 +49,13 @@ function showUserData(userData) {
 }
 
 function showDateData(_dateData) {
-
-  const dateData = _dateData.sort((p1, p2) => p1.key.localeCompare(p2.key));
+  const dateData = _dateData.sort(({ key: a }, { key: b }) => a.localeCompare(b));
   if (charts.dateChart) {
     updateChart(charts.dateChart, dateData);
   } else {
     const options = {
       series: [{
-        name: "Page virews",
+        name: 'Page virews',
         data: dateData.map(d => d.value),
       }],
       chart: {
@@ -85,7 +86,7 @@ function showDateData(_dateData) {
       }
     };
 
-    const chart = new ApexCharts(document.querySelector("#chart"), options);
+    const chart = new ApexCharts(document.querySelector('#chart'), options);
     chart.render();
     charts.dateChart = chart;
   }
@@ -107,6 +108,7 @@ function updateChart(chart, data) {
   });
 }
 
+
 function updateTotal(event) {
   document.getElementById('total').innerHTML = event.value;
 };
@@ -116,7 +118,7 @@ function updateOnlineUsers(event) {
 };
 
 function showPageData(_pagesData) {
-  const pagesData = _pagesData.sort((p1, p2) => p2.value - p1.value);
+  const pagesData = _pagesData.sort(sortByValue);
   if (charts.pageChart) {
     updateChart(charts.pageChart, pagesData);
   } else {
@@ -178,7 +180,7 @@ function showPageData(_pagesData) {
         type: 'gradient',
         gradient: {
           shade: 'light',
-          type: "horizontal",
+          type: 'horizontal',
           shadeIntensity: 0.25,
           gradientToColors: undefined,
           inverseColors: true,
@@ -188,19 +190,19 @@ function showPageData(_pagesData) {
         },
       }
     };
-    charts.pageChart = new ApexCharts(document.querySelector("#page-chart"), pageOptions);
+    charts.pageChart = new ApexCharts(document.querySelector('#page-chart'), pageOptions);
     charts.pageChart.render();
   }
   return pagesData;
 }
 
 function showLangData(_languageData) {
-  const languageData = _languageData.sort((p1, p2) => p2.value - p1.value);
-  document.getElementById('total-languages').innerHTML = `<h2>${languageData.length}</h2><ul>${languageData.splice(0,10).map(lang => `<li><b>${lang.label}</b> : ${lang.value}</li>`).join("")}</ul>`;
+  const languageData = _languageData.sort(sortByValue);
+  document.getElementById('total-languages').innerHTML = `<h2>${languageData.length}</h2><ul>${languageData.splice(0,10).map(lang => `<li><b>${lang.label}</b> : ${lang.value}</li>`).join('')}</ul>`;
 }
 
 function showLocationData(_locationData) {
-  const locationData = _locationData.sort((p1, p2) => p2.value - p1.value);
-  document.getElementById('total-locations').innerHTML = `<h2>${locationData.length}</h2><ul>${locationData.splice(0,10).map(local => `<li><b>${local.label}</b> : ${local.value}</li>`).join("")}</ul>`;
+  const locationData = _locationData.sort(sortByValue);
+  document.getElementById('total-locations').innerHTML = `<h2>${locationData.length}</h2><ul>${locationData.splice(0,10).map(local => `<li><b>${local.label}</b> : ${local.value}</li>`).join('')}</ul>`;
 }
 
