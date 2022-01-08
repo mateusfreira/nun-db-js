@@ -1,6 +1,22 @@
 const charts = {};
+const lastEvents = [];
+const maxEvents = 10;
 
 const sortByValue = (a, b) => b.value - a.value;
+
+function pushEvent(event) {
+  const element = document.createElement('div');
+  element.innerHTML = `${event.key} : ${event.value}`;
+  document.querySelector('#events').prepend(element);
+  const lastEvent = { ...event,
+    element,
+  };
+  lastEvents.unshift(lastEvent);
+  if (lastEvents.length >= maxEvents) {
+    lastEvents[lastEvents.length - 1].element.remove();
+    lastEvents.length = maxEvents;
+  }
+}
 
 function run() {
   performance.mark('keys-start');
@@ -37,6 +53,14 @@ function buildAnalitcsData(allKeys, prefix, plotFunction) {
       key,
       label: key.replace(prefix, '')
     };
+
+    if (prefix === 'page_') {
+      pushEvent({
+        key,
+        value
+      });
+    }
+
     if (count >= keys.length)
       plotFunction && plotFunction(Object.values(finalObject));
   }, true));
@@ -49,7 +73,11 @@ function showUserData(userData) {
 }
 
 function showDateData(_dateData) {
-  const dateData = _dateData.sort(({ key: a }, { key: b }) => a.localeCompare(b));
+  const dateData = _dateData.sort(({
+    key: a
+  }, {
+    key: b
+  }) => a.localeCompare(b));
   if (charts.dateChart) {
     updateChart(charts.dateChart, dateData);
   } else {
