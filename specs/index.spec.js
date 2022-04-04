@@ -7,8 +7,9 @@ describe('Nun-db test', () => {
 
   it('should set value to a key', () => {
     const now = Date.now();
-    return nun.setValue('some', now).then(() => nun.getValue('some'))
+    return nun.setValue(`some-${now}`, now).then(() => nun.getValue(`some-${now}`))
       .then(value => {
+        console.log(value);
         expect(value).to.be.equal(now);
       });
   });
