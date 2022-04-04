@@ -19,9 +19,10 @@ function pushEvent(event) {
 }
 
 function run() {
+  performance.mark('full-start');
   performance.mark('keys-start');
-  nun.watch("$connections", updateOnlineUsers, true);
-  nun.watch("visits", updateTotal, true);
+  //nun.watch("$connections", updateOnlineUsers, true);
+  //nun.watch("visits", updateTotal, true);
   nun.keys()
     .then(keys => {
       performance.mark('keys-end');
@@ -40,6 +41,7 @@ window.onload = () => {
 
 
 function buildAnalitcsData(allKeys, prefix, plotFunction) {
+  performance.mark(`start-${prefix}`);
   const keys = allKeys.filter(u => u.startsWith(prefix));
   const finalObject = {};
   let count = 0;
@@ -61,8 +63,11 @@ function buildAnalitcsData(allKeys, prefix, plotFunction) {
       });
     }
 
-    if (count >= keys.length)
+    if (count >= keys.length) {
+      performance.mark(`end-${prefix}`);
+      performance.measure(prefix, `start-${prefix}`, `end-${prefix}`);
       plotFunction && plotFunction(Object.values(finalObject));
+    }
   }, true));
   return Promise.resolve([]);
 }
