@@ -18,21 +18,22 @@ function pushEvent(event) {
   }
 }
 
+const keysPromise = nun.keys();
+
 function run() {
   performance.mark('full-start');
   performance.mark('keys-start');
-  //nun.watch("$connections", updateOnlineUsers, true);
-  //nun.watch("visits", updateTotal, true);
-  nun.keys()
-    .then(keys => {
-      performance.mark('keys-end');
-      performance.measure('keysMarker', 'keys-start', 'keys-end');
-      showUserData(keys.filter(u => u.startsWith('user_')));
-      buildAnalitcsData(keys, 'page_', showPageData);
-      buildAnalitcsData(keys.reverse(), 'date_', showDateData);
-      buildAnalitcsData(keys, 'lang_', showLangData);
-      buildAnalitcsData(keys, 'location_', showLocationData);
-    }).then(() => {});
+  nun.watch("$connections", updateOnlineUsers, true);
+  nun.watch("visits", updateTotal, true);
+  keysPromise.then(keys => {
+    performance.mark('keys-end');
+    performance.measure('keysMarker', 'keys-start', 'keys-end');
+    buildAnalitcsData(keys, 'lang_', showLangData);
+    buildAnalitcsData(keys, 'location_', showLocationData);
+    showUserData(keys.filter(u => u.startsWith('user_')));
+    buildAnalitcsData(keys, 'page_', showPageData);
+    buildAnalitcsData(keys.reverse(), 'date_', showDateData);
+  }).then(() => {});
 }
 
 window.onload = () => {
@@ -56,14 +57,11 @@ function buildAnalitcsData(allKeys, prefix, plotFunction) {
       label: key.replace(prefix, '')
     };
 
-    if (prefix === 'page_') {
+    if (count >= keys.length) {
       pushEvent({
         key,
         value
       });
-    }
-
-    if (count >= keys.length) {
       performance.mark(`end-${prefix}`);
       performance.measure(prefix, `start-${prefix}`, `end-${prefix}`);
       plotFunction && plotFunction(Object.values(finalObject));

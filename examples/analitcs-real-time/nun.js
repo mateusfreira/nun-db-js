@@ -1,5 +1,5 @@
-//const nun = new NunDb('wss://ws.nundb.org', "analitcs-blog", "analitcs-blog-2903uyi9ewrj");
-const nun = new NunDb('ws://localhost:3058', "analitcs-blog", "analitcs-blog-2903uyi9ewrj");
+const nun = new NunDb('wss://ws.nundb.org', "analitcs-blog", "analitcs-blog-2903uyi9ewrj");
+//const nun = new NunDb('ws://localhost:3058', "analitcs-blog", "analitcs-blog-2903uyi9ewrj");
 //const nun = new NunDb('ws://localhost:3058', "vue", "vue-pwd");
 const dateStr = new Date().toISOString();
 const userId = localStorage.getItem("userId") || `${Date.now()}_${crypto.getRandomValues(new Uint32Array(1))[0]}`;
