@@ -1,14 +1,15 @@
 const url = "wss://ws.nundb.org";
 //const url = "ws://localhost:3012";
-const user = "sample";
+const user = "sample-test";
 const pwd = "sample-pwd";
 const nun = new NunDb(url, user, pwd);
 describe('Nun-db test', () => {
 
   it('should set value to a key', () => {
     const now = Date.now();
-    return nun.setValue('some', now).then(() => nun.getValue('some'))
+    return nun.setValue(`some`, now).then(() => nun.getValue(`some`))
       .then(value => {
+        console.log(value);
         expect(value).to.be.equal(now);
       });
   });
