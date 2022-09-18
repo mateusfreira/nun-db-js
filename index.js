@@ -36,6 +36,7 @@
   }
   class NunDb {
     constructor(dbUrl, user = "", pwd = "", db, token) {
+      this._resolveCallback = null;
       this._start = Date.now();
       this._messages = 0;
       this._databaseUrl = dbUrl;
@@ -79,6 +80,7 @@
 
     messageHandler(message) {
       const messageParts = message.data.split(/\s(.+)|\n/);
+      console.log(messageParts);
       const [command, value] = messageParts;
       const methodName = `_${command.trim()}Handler`;
       if (this[methodName]) {
@@ -94,13 +96,18 @@
     }
 
     setValue(name, value) {
+      return this.setValueSafe(name, value, -1);
+    }
+
+    setValueSafe(name, value, version = -1) {
+      console.log(version);
       const objValue = {
         _id: this.nextMessageId(),
         value
       };
       this._ids.push(objValue._id);
       return this._checkConnectionReady().then(() => {
-        this._connection.send(`set ${name} ${JSON.stringify(objValue, null, 0)}`);
+        this._connection.send(`set-safe ${name} ${version} ${JSON.stringify(objValue, null, 0)}`);
       });
     }
 
@@ -259,6 +266,26 @@
     }
     _okHandler() {
       //@todo resouve and promise if pedding
+    }
+
+    _resolveHandler(message) {
+      const splitted = message.split(' ')
+      const parts = splitted.slice(0, 4)
+      const values = splitted.slice(4);// TOdo part non json files
+      const [opp_id, db, version, key] = parts;
+      if (this._resolveCallback) {
+        this._resolveCallback({
+          opp_id,
+          db,
+          version,
+          key,
+          values
+        }).then(value => {
+          this.send(`resolve 1 db_name some 2 some1`);
+        }).catch(e => {
+          console.log("TOdo needs error Handler here", e); /// GOMG
+        })
+      }
     }
 
     _changedHandler(event) {
