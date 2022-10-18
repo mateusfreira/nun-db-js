@@ -100,7 +100,6 @@
     }
 
     setValueSafe(name, value, version = -1) {
-      console.log(version);
       const objValue = {
         _id: this.nextMessageId(),
         value
@@ -281,7 +280,9 @@
           key,
           values
         }).then(value => {
-          this.send(`resolve 1 db_name some 2 some1`);
+          const resolveCommand = `resolve ${opp_id} ${db} ${key} ${version} ${value}`;
+          console.log(`Resolve ${resolveCommand}`);
+          this._connection.send(resolveCommand);
         }).catch(e => {
           console.log("TOdo needs error Handler here", e); /// GOMG
         })
