@@ -15,6 +15,19 @@
   const RECONNECT_TIME = 1000;
   const EMPTY = '<Empty>';
 
+  /*
+   * Remove the spaces
+   */
+  function objToValue(obj){
+    return JSON.stringify(obj, null, 0).replace(/\s/g, '^');
+  }
+  /*
+   * Put the spaces back
+   */
+  function valueToObj(value) {
+    return value !== EMPTY ? JSON.parse(value.replace(/\^/g, ' ')) : null;
+  }
+
   function storeLocalValue(key, value) {
     if (shouldSoreLocal) {
       localStorage.setItem(`nundb_${key}`, JSON.stringify(value));
@@ -106,7 +119,7 @@
       };
       this._ids.push(objValue._id);
       return this._checkConnectionReady().then(() => {
-        this._connection.send(`set-safe ${name} ${version} ${JSON.stringify(objValue, null, 0)}`);
+        this._connection.send(`set-safe ${name} ${version} ${objToValue(objValue)}`);
       });
     }
 
@@ -233,7 +246,7 @@
     _valueHandler(value) {
       const pendingPromise = this._pendingPromises.shift();
       try {
-        const jsonValue = value !== EMPTY ? JSON.parse(value) : null;
+        const jsonValue = value !== EMPTY ? valueToObj(value) : null;
         const valueToSend = jsonValue && jsonValue.value ? jsonValue.value : jsonValue;
         pendingPromise && pendingPromise.pedingResolve(valueToSend);
       } catch (e) {
@@ -270,7 +283,9 @@
     _resolveHandler(message) {
       const splitted = message.split(' ')
       const parts = splitted.slice(0, 4)
-      const values = splitted.slice(4);// TOdo part non json files
+      const values = splitted.slice(4);// Todo part non json files
+      console.log(values);
+      console.log(values.map(v => valueToObj(v)));
       const [opp_id, db, version, key] = parts;
       if (this._resolveCallback) {
         this._resolveCallback({
@@ -278,9 +293,9 @@
           db,
           version,
           key,
-          values
+          values: values.map(value => valueToObj(value))
         }).then(value => {
-          const resolveCommand = `resolve ${opp_id} ${db} ${key} ${version} ${value}`;
+          const resolveCommand = `resolve ${opp_id} ${db} ${key} ${version} ${objToValue(value)}`;
           console.log(`Resolve ${resolveCommand}`);
           this._connection.send(resolveCommand);
         }).catch(e => {
