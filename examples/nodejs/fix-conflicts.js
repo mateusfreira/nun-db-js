@@ -5,7 +5,7 @@ const delay = n => new Promise(resolve => setTimeout(resolve, n));
 
 
 const key = `jose-${Date.now()}`;
-//const key = `jose`
+///const key = `jose`
 const name1 = `DB1 ${Date.now()}`;
 const name2 = `DB2 ${Date.now()}`;
 const resolveTo = `Resolved name ${Date.now()}`;
@@ -15,22 +15,26 @@ console.log({
 });
 async function run() {
   const version = parseInt(new Date().getTime() / 1000, 10);
-  const db1 = new NunDb('ws://127.0.0.1:9093/', "test", "test-pwd");// Secoundary
+  const db1 = new NunDb('ws://127.0.0.1:3057/', "test", "test-pwd");// Secoundary
+  const db2 = new NunDb('ws://127.0.0.1:3059/', "test", "test-pwd");// Secoundary 2 do I want to support this? Works as
+  //expected in the secoundary 2
   //const db1 = new NunDb('ws://127.0.0.1:3058/', "test", "test-pwd");// Secoundary
-  await delay(1000);
-  db1.watch("$$conflicts", e => {
+  await delay(500);
+  db2.watch("$$conflicts", e => {
     console.log("Confilct here", e);
   });
+  await delay(500);
 
-  db1._resolveCallback = (e) => {
+  db2._resolveCallback = (e) => {
     console.log('db1._resolveCallback', 'will resolve', e);
-  return Promise.resolve({ id: e.values[0].id, value: { name: resolveTo } });
+    return Promise.resolve({ id: e.values[0].id, value: { name: resolveTo } });
   };
 
-  const save1 = db.setValueSafe(key, { name: name1 }, version).then(e => console.log("sucess 1"));
-  const save2 = db1.setValueSafe(key, { name: name2 }, version).then(e => console.log("sucess 2"));
+
+  const save2 = db1.setValueSafe(key, { name: name2 }, version).then(e => console.log("sucess 2")).catch(console.error);
+  const save1 = db.setValueSafe(key, { name: name1 }, version).then(e => console.log("sucess 1")).catch(console.error);
   await Promise.all([save1, save2]);
-  await delay(300);
+  await delay(3000);
   const finalValue = await db.getValue(key);
   console.log(finalValue);
   if (finalValue?.name === resolveTo) {
