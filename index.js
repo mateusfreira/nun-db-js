@@ -18,15 +18,16 @@
   /*
    * Remove the spaces
    */
-  function objToValue(obj){
+  function objToValue(obj) {
     return JSON.stringify(obj, null, 0).replace(/\s/g, '^');
   }
   /*
    * Put the spaces back
    */
   function valueToObj(value) {
-    return value !== EMPTY ? JSON.parse(value.replace(/\^/g, ' ')) : null;
+    return value && value !== EMPTY ? JSON.parse(value.replace(/\^/g, ' ')) : null;
   }
+
 
   function storeLocalValue(key, value) {
     if (shouldSoreLocal) {
@@ -57,6 +58,7 @@
       this._watchers = {};
       this._ids = [];
       this._pendingPromises = [];
+      this._name = `db:${this._databaseUrl}`;
 
       if (!db && !token) {
         this._db = user;
@@ -92,6 +94,7 @@
     }
 
     messageHandler(message) {
+      console.log('messageHandler', message.data);
       const messageParts = message.data.split(/\s(.+)|\n/);
       console.log(messageParts);
       const [command, value] = messageParts;
@@ -155,6 +158,12 @@
     }
 
 
+    becameArbiter() {
+      return this._checkConnectionReady().then(() => {
+        return this._connection.send(`arbiter`);
+      });
+    }
+
     getValue(name) {
       return this._checkConnectionReady().then(() => {
         this._connection.send(`get ${name}`);
@@ -199,7 +208,7 @@
       setTimeout(() => {
         this.connect()
           .then(() => {
-            console.log('Reconnected');
+            console.log(this._name, 'Reconnected');
             this._rewatch();
           })
           .catch(console.error.bind(console, 'Error reconecting'));
@@ -250,7 +259,8 @@
         const valueToSend = jsonValue && jsonValue.value ? jsonValue.value : jsonValue;
         pendingPromise && pendingPromise.pedingResolve(valueToSend);
       } catch (e) {
-        pendingPromise && pendingPromise.pedingReject(e);
+        //pendingPromise && pendingPromise.pedingReject(e);
+        pendingPromise && pendingPromise.pedingResolve(value);
       }
     }
 
@@ -274,33 +284,49 @@
     }
 
     _errorHandler(error) {
-      console.log(`Todo implement error handler ${error}`);
+      console.log(`Todo implement error handler ${error.trim()}`);
     }
     _okHandler() {
       //@todo resouve and promise if pedding
     }
 
+    valueObjOrPromise(value) {
+      console.log(value);
+      if (value.startsWith('$$conflicts_')) {
+        return new Promise((resolve, reject) => {
+
+          console.log(`will watch for the key ${value} key resolved to `);
+          this.watch(value, e => {
+            console.log(`Conflicted key resolved to `, {
+              e
+            });
+            resolve(valueToObj(e.value.split(" ")[1]));
+          }, true);
+        });
+      } else {
+        return Promise.resolve(valueToObj(value));
+      }
+    }
     _resolveHandler(message) {
       const splitted = message.split(' ')
       const parts = splitted.slice(0, 4)
-      const values = splitted.slice(4);// Todo part non json files
-      console.log(values);
-      console.log(values.map(v => valueToObj(v)));
+      const values = splitted.slice(4); // Todo part non json files
       const [opp_id, db, version, key] = parts;
       if (this._resolveCallback) {
-        this._resolveCallback({
-          opp_id,
-          db,
-          version,
-          key,
-          values: values.map(value => valueToObj(value))
-        }).then(value => {
-          const resolveCommand = `resolve ${opp_id} ${db} ${key} ${version} ${objToValue(value)}`;
-          console.log(`Resolve ${resolveCommand}`);
-          this._connection.send(resolveCommand);
-        }).catch(e => {
-          console.log("TOdo needs error Handler here", e); /// GOMG
-        })
+          Promise.all(values.map(value => this.valueObjOrPromise(value)))
+          .then(values_resolved => this._resolveCallback({
+            opp_id,
+            db,
+            version,
+            key,
+            values: values_resolved,
+          })).then(value => {
+            const resolveCommand = `resolve ${opp_id} ${db} ${key} ${version} ${objToValue(value)}`;
+            console.log(`Resolve ${resolveCommand}`);
+            this._connection.send(resolveCommand);
+          }).catch(e => {
+            console.log("TOdo needs error Handler here", e); /// GOMG
+          })
       }
     }
 
@@ -317,7 +343,11 @@
             });
           }
         } catch (e) {
-          console.error(e);
+          console.error(e, { name, value});
+          watcher({
+              name,
+              value: value
+          });
         }
       });
     }

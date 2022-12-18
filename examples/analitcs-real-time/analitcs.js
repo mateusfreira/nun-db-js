@@ -50,6 +50,12 @@ function buildAnalitcsData(allKeys, prefix, plotFunction) {
   keys.map(key => nun.watch(key, ({
     value
   }) => {
+    if (!value) {
+      console.log(`${key} : Undefined ${value}`);
+      nun.setValue(key, '0');
+    } else {
+      console.log(`Valid ${key} : ${value}`);
+    }
     count++;
     finalObject[key] = {
       value,
