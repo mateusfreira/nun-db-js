@@ -31,13 +31,13 @@ async function run() {
   };
 
 
-  const save2 = db1.setValueSafe(key, { name: name2 }, version).then(e => console.log("sucess 2", e)).catch(console.error);
-  const save1 = db2.setValueSafe(key, { name: name1 }, version).then(e => console.log("sucess 1", e)).catch(console.error);
-  const save3 = db2.setValueSafe(key, { name: name3 }, version).then(e => console.log("sucess 3", e)).catch(console.error);
-  const many = new Array(10).fill().map(()=> db1.setValueSafe(key, { name: name3 }, version));
+  const save2 = db1.setValueSafe(key, { name: name2 }, version).then(e => console.log("success 2", e)).catch(console.error);
+  const save1 = db2.setValueSafe(key, { name: name1 }, version).then(e => console.log("success 1", e)).catch(console.error);
+  //const save3 = db2.setValueSafe(key, { name: name3 }, version).then(e => console.log("many", e)).catch(console.error);
+  const many = new Array(1000).fill().map((_, i)=> delay((10 * i) +1).then(e => db2.setValueSafe(key, { name: `${name3}-${i}` }, version)));
   // Remove many it works
-  await Promise.all([save1, save2, save3].concat(many));
-  await delay(2000);
+  await Promise.all([save1, save2].concat(many));
+  await delay(1000);
   const finalValue = await db.getValue(key);
   const allName = [name1, name2, name3];
   console.log({ finalValue });

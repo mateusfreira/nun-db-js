@@ -290,17 +290,23 @@
       //@todo resouve and promise if pedding
     }
 
-    valueObjOrPromise(value) {
-      console.log(value);
+    valueObjOrPromise(value, key) {
       if (value.startsWith('$$conflicts_')) {
         return new Promise((resolve, reject) => {
-
           console.log(`will watch for the key ${value} key resolved to `);
           this.watch(value, e => {
             console.log(`Conflicted key resolved to `, {
               e
             });
-            resolve(valueToObj(e.value.split(" ")[1]));
+
+            const parts = e.value.split(" ");
+            const command = parts.at(0);
+
+            if(command === 'resolved') {
+              resolve(valueToObj(parts[1]));
+            } else {
+              console.log(`${key} not resolved yet, will wait for resolution!!`);
+            }
           }, true);
         });
       } else {
@@ -313,7 +319,7 @@
       const values = splitted.slice(4); // Todo part non json files
       const [opp_id, db, version, key] = parts;
       if (this._resolveCallback) {
-          Promise.all(values.map(value => this.valueObjOrPromise(value)))
+          Promise.all(values.map(value => this.valueObjOrPromise(value, key)))
           .then(values_resolved => this._resolveCallback({
             opp_id,
             db,
@@ -343,7 +349,7 @@
             });
           }
         } catch (e) {
-          console.error(e, { name, value});
+          //console.error(e, { name, value});
           watcher({
               name,
               value: value
