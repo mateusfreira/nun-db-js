@@ -370,23 +370,26 @@
             }
         }
 
-        _changedHandler(event) {
-            const [name, value] = event.split(/\s(.+)/);
+        _changedVersionHandler(event) {
+            const [name, rest] = event.split(/\s(.+)/);
+            const [version, value] = rest.split(/\s(.+)/);
             const watchers = this._watchers[name] || [];
             watchers.forEach(watcher => {
                 try {
-                    const parsedValue = value !== EMPTY ? JSON.parse(value) : null;
+                    const parsedValue = value !== EMPTY ? valueToObj(value) : null;
                     if (!parsedValue || this._ids.indexOf(parsedValue._id) === -1) {
                         watcher({
                             name,
-                            value: parsedValue && parsedValue.value || parsedValue
+                            value: parsedValue && parsedValue.value || parsedValue,
+                            version,
                         });
                     }
                 } catch (e) {
                     //console.error(e, { name, value});
                     watcher({
                         name,
-                        value: value
+                        value: value,
+                        version
                     });
                 }
             });
