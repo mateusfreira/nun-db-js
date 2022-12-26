@@ -10,10 +10,16 @@
         root.NunDb = factory(root.NunDb);
     }
 }(typeof self !== 'undefined' ? self : this, function(b) {
+    const memoryDb = new Map();
     const shouldSoreLocal = typeof localStorage !== 'undefined';
     const _webSocket = typeof WebSocket != 'undefined' ? WebSocket : require('websocket').w3cwebsocket;
     const RECONNECT_TIME = 1000;
     const EMPTY = '<Empty>';
+
+    function commandToFuncion(command) {
+        return command.trim().split(/-|\s/)
+            .map((c, i) => i === 0 ? c : c.charAt(0).toUpperCase() + c.slice(1)).join('')
+    }
 
     /*
      * Remove the spaces
@@ -33,6 +39,7 @@
         if (shouldSoreLocal) {
             localStorage.setItem(`nundb_${key}`, JSON.stringify(value));
         }
+        memoryDb.set(key, value);
     }
 
     function getLocalValue(key) {
@@ -50,6 +57,7 @@
     }
     class NunDb {
         constructor(dbUrl, user = "", pwd = "", db, token) {
+            this._shouldReConnect = true;
             this._resolveCallback = null;
             this._start = Date.now();
             this._messages = 0;
@@ -96,8 +104,7 @@
         messageHandler(message) {
             const messageParts = message.data.split(/\s(.+)|\n/);
             const [command, value] = messageParts;
-            const commandMethodName = command.trim().split('-')
-                .map((c, i) => i === 0 ? c : c.charAt(0).toUpperCase() + c.slice(1)).join('');
+            const commandMethodName = commandToFuncion(command);
             const methodName = `_${commandMethodName.trim()}Handler`;
             if (this[methodName]) {
                 this[methodName](value);
@@ -115,11 +122,18 @@
             return this.setValueSafe(name, value, -1);
         }
 
-        setValueSafe(name, value, version = -1) {
+        setValueSafe(name, value, _version) {
+            const localValue = getLocalValue(name);
             const objValue = {
                 _id: this.nextMessageId(),
-                value
+                value,
             };
+            const version = _version ? _version : localValue.version;
+            storeLocalValue(name, {
+                value: objValue,
+                version,
+                pendding: true
+            });
             this._ids.push(objValue._id);
             return this._checkConnectionReady().then(() => {
                 this._connection.send(`set-safe ${name} ${version} ${objToValue(objValue)}`);
@@ -164,13 +178,15 @@
             });
         }
 
-        getValue(name) {
+        getValue(key) {
             return this._checkConnectionReady().then(() => {
-                this._connection.send(`get ${name}`);
-                const pendingPromise = {};
+                this._connection.send(`get ${key}`);
+                const pendingPromise = {
+                    key,
+                    kind: 'get'
+                };
                 pendingPromise.promise = new Promise((resolve, reject) => {
                     pendingPromise.pedingResolve = (value) => {
-                        storeLocalValue(name, value);
                         resolve(value);
                     };
                     pendingPromise.pedingReject = reject;
@@ -180,13 +196,15 @@
             });
         }
 
-        getValueSafe(name) {
+        getValueSafe(key) {
             return this._checkConnectionReady().then(() => {
-                this._connection.send(`get-safe ${name}`);
-                const pendingPromise = {};
+                this._connection.send(`get-safe ${key}`);
+                const pendingPromise = {
+                    key,
+                    kind: 'get-safe'
+                };
                 pendingPromise.promise = new Promise((resolve, reject) => {
                     pendingPromise.pedingResolve = (value) => {
-                        storeLocalValue(name, value);
                         resolve(value);
                     };
                     pendingPromise.pedingReject = reject;
@@ -196,9 +214,9 @@
             });
         }
 
-        keys() {
+        keys(prefix = '') {
             return this._checkConnectionReady().then(() => {
-                this._connection.send('keys');
+                this._connection.send(`keys ${prefix}`);
                 const pendingPromise = {};
                 pendingPromise.promise = new Promise((resolve, reject) => {
                     pendingPromise.pedingResolve = resolve;
@@ -217,18 +235,24 @@
             }
         }
 
+        reConnect() {
+            if (this._shouldReConnect) {
+                this.connect()
+                    .then(() => {
+                        if (this._connected) {
+                            console.log(this._name, 'Reconnected');
+                            this._pushPneeding()
+                            this._rewatch();
+                        }
+                    })
+                    .catch(console.error.bind(console, 'Error reconecting'));
+            }
+        }
         _onClose(connectionListener, error) {
             if (this._connected) {
                 this._connected = false;
             }
-            setTimeout(() => {
-                this.connect()
-                    .then(() => {
-                        console.log(this._name, 'Reconnected');
-                        this._rewatch();
-                    })
-                    .catch(console.error.bind(console, 'Error reconecting'));
-            }, RECONNECT_TIME);
+            setTimeout(() => this.reConnect(), RECONNECT_TIME);
         }
         _onOpen(connectionListener) {
             connectionListener.connectReady();
@@ -238,24 +262,37 @@
             return this._connectionPromise;
         }
 
+        goOffline() {
+            this._shouldReConnect = false;
+            this._connection.close();
+        }
+
+        goOnline() {
+            this._shouldReConnect = true;
+            this.reConnect();
+        }
+
         watch(name, callback, currentValue) {
+            const localValue = getLocalValue(name);
+            if (localValue && currentValue) {
+                setTimeout(() =>
+                    callback({
+                        name,
+                        value: localValue.value.value,
+                        version: localValue.version,
+                        pedding: localValue.pendding,
+                    })
+                );
+            }
             return this._checkConnectionReady().then(() => {
                 this._connection.send(`watch ${name}`);
                 this._watchers[name] = this._watchers[name] || [];
                 this._watchers[name].push(callback);
                 if (currentValue) {
-                    const localValue = getLocalValue(name);
-                    if (localValue) {
-                        setTimeout(() =>
-                            callback({
-                                name,
-                                value: localValue
-                            })
-                        );
-                    }
-                    this.getValue(name).then(value => (!value || value !== localValue) && callback({
+                    this.getValueSafe(name).then((e) => (!e.value || e.value !== localValue) && callback({
                         name,
-                        value
+                        value: e.value,
+                        version: e.version
                     }));
                 }
 
@@ -263,6 +300,14 @@
 
         }
 
+        _pushPneeding() {
+            const allValues = memoryDb.entries();
+            for (const [key, storedValue] of allValues) {
+                if (storedValue.pendding === true) {
+                    this.setValueSafe(key, storedValue.value.value, storedValue.version);
+                }
+            }
+        }
         _rewatch() {
             const keysToWatch = Object.keys(this._watchers);
             keysToWatch.forEach(key => this._connection.send(`watch ${key}`));
@@ -288,13 +333,25 @@
             try {
                 const jsonValue = value !== EMPTY ? valueToObj(value) : null;
                 const valueToSend = jsonValue && jsonValue.value ? jsonValue.value : jsonValue;
+                storeLocalValue(pendingPromise.key, {
+                    ...jsonValue,
+                    pendding: false,
+                    version: parseInt(version)
+                });
                 pendingPromise && pendingPromise.pedingResolve({
                     value: valueToSend,
                     version: parseInt(version)
                 });
             } catch (e) {
-                //pendingPromise && pendingPromise.pedingReject(e);
-                pendingPromise && pendingPromise.pedingResolve(value);
+                storeLocalValue(pendingPromise.key, {
+                    value,
+                    pendding: false,
+                    version: parseInt(version)
+                });
+                pendingPromise && pendingPromise.pedingResolve({
+                    value: value,
+                    version: parseInt(version)
+                });
             }
         }
 
@@ -318,7 +375,8 @@
         }
 
         _errorHandler(error) {
-            console.log(`Todo implement error handler ${error.trim()}`);
+            const fnName = commandToFuncion(`error-${error.trim()}`);
+            console.log(`Todo implement error handler ${fnName}`);
         }
         _okHandler() {
             //@todo resouve and promise if pedding
@@ -332,8 +390,7 @@
                         console.log(`Conflicted key resolved to `, {
                             e
                         });
-
-                        const parts = e.value.split(" ");
+                        const parts = (e.value && e.value.split && e.value.split(" ")) || [];
                         const command = parts.at(0);
 
                         if (command === 'resolved') {
@@ -347,6 +404,7 @@
                 return Promise.resolve(valueToObj(value));
             }
         }
+
         _resolveHandler(message) {
             const splitted = message.split(' ')
             const parts = splitted.slice(0, 4)
@@ -371,23 +429,29 @@
         }
 
         _changedVersionHandler(event) {
-            const [name, rest] = event.split(/\s(.+)/);
+            const [key, rest] = event.split(/\s(.+)/);
             const [version, value] = rest.split(/\s(.+)/);
-            const watchers = this._watchers[name] || [];
+            const watchers = this._watchers[key] || [];
             watchers.forEach(watcher => {
                 try {
                     const parsedValue = value !== EMPTY ? valueToObj(value) : null;
+
+                    storeLocalValue(key, {
+                        value: parsedValue,
+                        pendding: false,
+                        version: parseInt(version)
+                    });
                     if (!parsedValue || this._ids.indexOf(parsedValue._id) === -1) {
                         watcher({
-                            name,
-                            value: parsedValue && parsedValue.value || parsedValue,
+                            name: key,
+                            value: (parsedValue && parsedValue.value) || parsedValue,
                             version,
                         });
                     }
                 } catch (e) {
                     //console.error(e, { name, value});
                     watcher({
-                        name,
+                        name: key,
                         value: value,
                         version
                     });
