@@ -1,5 +1,5 @@
-//const url = "wss://ws.nundb.org";
-const url = "ws://localhost:3058";
+const url = "wss://ws.nundb.org";
+//const url = "ws://localhost:3058";
 const user = "sample-test";
 const pwd = "sample-pwd";
 const nun = new NunDb(url, user, pwd);

@@ -292,14 +292,16 @@
         watch(name, callback, currentValue) {
             const localValue = getLocalValue(name);
             if (localValue && currentValue) {
-                setTimeout(() =>
-                    callback({
-                        name,
-                        value: localValue.value && localValue.value.value,
-                        version: localValue.version,
-                        pedding: localValue.pendding,
-                    })
-                );
+                setTimeout(() => {
+                  const has_value = (typeof localValue.value) !== 'undefined' && (typeof localValue.value.value) !== 'undefined';
+                  const value = has_value ? localValue.value.value : localValue.value;
+                  callback({
+                    name,
+                    value,
+                    version: localValue.version,
+                    pedding: localValue.pendding,
+                  })
+                });
             }
             return this._checkConnectionReady().then(() => {
                 this._connection.send(`watch ${name}`);
@@ -350,13 +352,13 @@
         _valueVersionHandler(valueServer) {
             const valueParts = valueServer.split(/\s(.+)/);
             const [version, value] = valueParts;
-            console.log('_valueVersion', version);
             const pendingPromise = this._pendingPromises.shift();
             try {
                 const jsonValue = value !== EMPTY ? valueToObj(value) : null;
                 const valueToSend = jsonValue && jsonValue.value ? jsonValue.value : jsonValue;
                 storeLocalValue(pendingPromise.key, {
-                    ...jsonValue,
+                    id: jsonValue && jsonValue.id,
+                    value: valueToSend,
                     pendding: false,
                     version: parseInt(version)
                 });
@@ -407,11 +409,7 @@
         valueObjOrPromise(value, key) {
             if (value.startsWith('$$conflicts_')) {
                 return new Promise((resolve, reject) => {
-                    console.log(`will watch for the key ${value} key resolved to `);
                     this.watch(value, e => {
-                        console.log(`Conflicted key resolved to `, {
-                            e
-                        });
                         const parts = (e.value && e.value.split && e.value.split(" ")) || [];
                         const command = parts.at(0);
                         switch (command) {
@@ -448,7 +446,7 @@
                     })).then(value => {
                         const nextVersion = version === IN_CONFLICT_RESOLUTION_KEY_VERSION ? this.nextMessageId() : version;
                         const resolveCommand = `resolve ${opp_id} ${db} ${key} ${nextVersion} ${objToValue(value)}`;
-                        console.log(`Resolve ${resolveCommand}`);
+                        //console.log(`Resolve ${resolveCommand}`);
                         this._connection.send(resolveCommand);
                     }).catch(e => {
                         console.log("TOdo needs error Handler here", e); /// GOMG
