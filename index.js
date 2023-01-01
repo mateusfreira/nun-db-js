@@ -10,11 +10,13 @@
         root.NunDb = factory(root.NunDb);
     }
 }(typeof self !== 'undefined' ? self : this, function(b) {
+    const IN_CONFLICT_RESOLUTION_KEY_VERSION = -2;
     const memoryDb = new Map();
     const shouldSoreLocal = typeof localStorage !== 'undefined';
     const _webSocket = typeof WebSocket != 'undefined' ? WebSocket : require('websocket').w3cwebsocket;
     const RECONNECT_TIME = 1000;
     const EMPTY = '<Empty>';
+    const LAST_SERVER_KEY = 'nundb_$$last_server_';
 
     function commandToFuncion(command) {
         return command.trim().split(/-|\s/)
@@ -39,6 +41,10 @@
         if (shouldSoreLocal) {
             localStorage.setItem(`nundb_${key}`, JSON.stringify(value));
         }
+
+        if (shouldSoreLocal && value && !value.pendding) {
+            localStorage.setItem(`${LAST_SERVER_KEY}${key}`, JSON.stringify(value));
+        }
         memoryDb.set(key, value);
     }
 
@@ -57,6 +63,7 @@
     }
     class NunDb {
         constructor(dbUrl, user = "", pwd = "", db, token) {
+            this._isArbiter = false;
             this._shouldReConnect = true;
             this._resolveCallback = null;
             this._start = Date.now();
@@ -173,9 +180,18 @@
 
 
         becameArbiter() {
+            this._isArbiter = true;
             return this._checkConnectionReady().then(() => {
                 return this._connection.send(`arbiter`);
             });
+        }
+
+        _getValueLastServerValue(key) {
+            return JSON.parse(localStorage.getItem(`${LAST_SERVER_KEY}${key}`));
+        }
+
+        _getLocalValue(key) {
+            return getLocalValue(key);
         }
 
         getValue(key) {
@@ -241,8 +257,9 @@
                     .then(() => {
                         if (this._connected) {
                             console.log(this._name, 'Reconnected');
-                            this._pushPneeding()
+                            this._checkArbiter();
                             this._rewatch();
+                            this._pushPneeding()
                         }
                     })
                     .catch(console.error.bind(console, 'Error reconecting'));
@@ -278,7 +295,7 @@
                 setTimeout(() =>
                     callback({
                         name,
-                        value: localValue.value.value,
+                        value: localValue.value && localValue.value.value,
                         version: localValue.version,
                         pedding: localValue.pendding,
                     })
@@ -306,6 +323,11 @@
                 if (storedValue.pendding === true) {
                     this.setValueSafe(key, storedValue.value.value, storedValue.version);
                 }
+            }
+        }
+        _checkArbiter() {
+            if (this._isArbiter) {
+                this.becameArbiter();
             }
         }
         _rewatch() {
@@ -392,11 +414,15 @@
                         });
                         const parts = (e.value && e.value.split && e.value.split(" ")) || [];
                         const command = parts.at(0);
-
-                        if (command === 'resolved') {
-                            resolve(valueToObj(parts[1]));
-                        } else {
-                            console.log(`${key} not resolved yet, will wait for resolution!!`);
+                        switch (command) {
+                            case 'resolved':
+                                return resolve(valueToObj(parts[1]));
+                            case undefined:
+                                return resolve(this.getValue(key).then(v => ({
+                                    value: v,
+                                    id: this.nextMessageId()
+                                })));
+                            default:
                         }
                     }, true);
                 });
@@ -409,7 +435,8 @@
             const splitted = message.split(' ')
             const parts = splitted.slice(0, 4)
             const values = splitted.slice(4); // Todo part non json files
-            const [opp_id, db, version, key] = parts;
+            const [opp_id, db, _version, key] = parts;
+            const version = parseInt(_version, 10);
             if (this._resolveCallback) {
                 Promise.all(values.map(value => this.valueObjOrPromise(value, key)))
                     .then(values_resolved => this._resolveCallback({
@@ -419,7 +446,8 @@
                         key,
                         values: values_resolved,
                     })).then(value => {
-                        const resolveCommand = `resolve ${opp_id} ${db} ${key} ${version} ${objToValue(value)}`;
+                        const nextVersion = version === IN_CONFLICT_RESOLUTION_KEY_VERSION ? this.nextMessageId() : version;
+                        const resolveCommand = `resolve ${opp_id} ${db} ${key} ${nextVersion} ${objToValue(value)}`;
                         console.log(`Resolve ${resolveCommand}`);
                         this._connection.send(resolveCommand);
                     }).catch(e => {
