@@ -14,22 +14,20 @@ let resolveTo = `Resolved name ${Date.now()}`;
 console.log({
   key
 });
+
 async function run() {
   const version = parseInt(new Date().getTime() / 1000, 10);
   const db1 = new NunDb('ws://127.0.0.1:3057/', "test", "test-pwd");// Secoundary
   const db2 = new NunDb('ws://127.0.0.1:3059/', "test", "test-pwd");// Secoundary 2 do I want to support this? Works as
   //expected in the secoundary 2
   const primary = new NunDb('ws://127.0.0.1:3058/', "test", "test-pwd");// Secoundary
-  await db.becameArbiter();
-
-  db._resolveCallback = (e) => {
+  await db.becameArbiter((e) => {
     const concat = e.values.map( _ => _.value.name).join(', ');
     console.log('Will finally resolve to',concat);
     //console.log(e);
     //console.log('db1._resolveCallback', 'will resolve', JSON.stringify(e, null, 4, 4));
     return Promise.resolve({ id: e.values.at(0).id, value: { name: concat } });
-  };
-
+  });
 
   const save2 = db1.setValueSafe(key, { name: name2 }, version).then(e => console.log("success 2", e)).catch(console.error);
   const save1 = db2.setValueSafe(key, { name: name1 }, version).then(e => console.log("success 1", e)).catch(console.error);

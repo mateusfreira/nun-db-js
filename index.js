@@ -179,8 +179,9 @@
         }
 
 
-        becameArbiter() {
+        becameArbiter(resolveCallback) {
             this._isArbiter = true;
+            this._resolveCallback = resolveCallback;
             return this._checkConnectionReady().then(() => {
                 return this._connection.send(`arbiter`);
             });
@@ -329,7 +330,7 @@
         }
         _checkArbiter() {
             if (this._isArbiter) {
-                this.becameArbiter();
+                this.becameArbiter(this._resolveCallback);
             }
         }
         _rewatch() {
