@@ -195,6 +195,10 @@
             return getLocalValue(key);
         }
 
+        get(key) {
+            return this.getValue(key);
+        }
+
         getValue(key) {
             return this._checkConnectionReady().then(() => {
                 this._connection.send(`get ${key}`);
