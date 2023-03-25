@@ -1,8 +1,10 @@
 const url = "wss://ws.nundb.org";
-//const url = "ws://localhost:3012";
+//const url = "ws://localhost:3058";
 const user = "sample-test";
 const pwd = "sample-pwd";
+const nun2 = new NunDb(url, user, pwd);
 const nun = new NunDb(url, user, pwd);
+
 describe('Nun-db test', () => {
 
   it('should set value to a key', () => {
@@ -15,28 +17,29 @@ describe('Nun-db test', () => {
   });
 
   it('should watch a value', () => {
-    const now = Date.now();
     const values = [];
     const wait = time => {
       return new Promise(resolve => {
-        setTimeout(resolve, time || 900);
+        setTimeout(resolve, time || 300);
       });
     };
 
-    const nun2 = new NunDb(url, user, pwd);
     nun2.watch('some', ({
       value
     }) => {
       values.push(value);
     });
     return wait().then(() => Promise.all([
-      nun.setValue('some', 1),
-      nun.setValue('some', 2),
-      nun.setValue('some', 3)
-    ]))
-      .then(() => wait()).then(() => {
+        nun.setValue('some', 1),
+        nun.setValue('some', 2),
+        nun.setValue('some', 3)
+      ]))
+      .then(() => wait())
+      .then(() => {
+        console.log(values);
         expect(values.length).to.be.equals(3);
         expect(values).to.be.deep.equals([1, 2, 3]);
+        return 1;
       });
   });
 
@@ -45,12 +48,19 @@ describe('Nun-db test', () => {
       nun.setValue('some', 1),
       nun.setValue('some1', 1),
       nun.setValue('some2', 1),
-      nun.setValue('some3', 1)
+      nun.setValue('some3', 1),
+      nun.setValue('state', 1)
     ]).then(() => {
       return nun.keys();
     }).then(keys => {
-      expect(keys.length).to.be.equals(5);
-      expect(keys.sort()).to.be.deep.equals(['$connections', 'some', 'some1', 'some2', 'some3']);
+      console.log(keys);
+      expect(keys.length).to.be.equals(6);
+      expect(keys.sort()).to.be.deep.equals(['$connections', 'some', 'some1', 'some2', 'some3', 'state']);
+    }).then(() => {
+      return nun.keys('some');
+    }).then(keys => {
+      expect(keys.length).to.be.equals(4);
+      expect(keys.sort()).to.be.deep.equals(['some', 'some1', 'some2', 'some3']);
     });
   });
 
@@ -71,8 +81,8 @@ describe('Nun-db test', () => {
   it('should return value with a value key', () => {
 
     return nun.setValue('some', {
-      value: 'some'
-    })
+        value: 'some'
+      })
       .then(() => {
         return nun.getValue('some').then(value => {
           expect(value).deep.equals({
@@ -84,46 +94,59 @@ describe('Nun-db test', () => {
 
   it('should delete the keys from the db', async () => {
     await Promise.all([
+      nun.setValue('state', 1),
       nun.setValue('some', 1),
       nun.setValue('some1', 1),
       nun.setValue('some2', 1),
       nun.setValue('some3', 1)
     ]);
     const keys = await nun.keys();
-    expect(keys.length).to.be.equals(5);
+    console.log(keys);
+    expect(keys.length).to.be.equals(6);
     await Promise.all([
+      nun.remove('state'),
       nun.remove('some'),
       nun.remove('some1'),
-      nun.remove('some2', 1),
-      nun.remove('some3', 1)
+      nun.remove('some2'),
+      nun.remove('some3')
     ]);
     const finalKeys = await nun.keys();
     expect(finalKeys.length).to.be.equals(1);
   });
 
   it('should watch deleted value', () => {
-    const now = Date.now();
     const values = [];
     const wait = time => {
       return new Promise(resolve => {
-        setTimeout(resolve, time || 900);
+        setTimeout(resolve, time || 100);
       });
     };
 
-    const nun2 = new NunDb(url, user, pwd);
-    nun2.watch('someToDelete', ({
+    nun2.watch('someToDelete1', ({
       value
     }) => {
       values.push(value);
     });
-    return wait().then(() => Promise.all([
-      nun.setValue('someToDelete', 1),
-      nun.setValue('someToDelete', 2),
-    ]))
-      .then(()=>nun.remove('someToDelete'))
-      .then(() => wait()).then(() => {
+    return wait(500)
+      .then(() => wait(500))
+      .then(() => nun.setValue('someToDelete1', 1))
+      .then(() => nun.setValue('someToDelete1', 2))
+      .then(() => nun.remove('someToDelete1'))
+      .then(() => wait(500))
+      .then(() => {
         expect(values.length).to.be.equals(3);
         expect(values).to.be.deep.equals([1, 2, null]);
+      });
+  });
+
+  it('should store value locally', () => {
+    const now = Date.now();
+    return nun.setValue(`state`, now)
+      .then(() => {
+        return nun.watch('state', (e) => {
+          console.log('test watch', e);
+          expect(e.value).to.be.equals(now);
+        }, true);
       });
   });
 });
