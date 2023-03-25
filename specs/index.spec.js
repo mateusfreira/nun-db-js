@@ -2,7 +2,9 @@ const url = "wss://ws.nundb.org";
 //const url = "ws://localhost:3058";
 const user = "sample-test";
 const pwd = "sample-pwd";
+const nun2 = new NunDb(url, user, pwd);
 const nun = new NunDb(url, user, pwd);
+
 describe('Nun-db test', () => {
 
   it('should set value to a key', () => {
@@ -15,15 +17,13 @@ describe('Nun-db test', () => {
   });
 
   it('should watch a value', () => {
-    const now = Date.now();
     const values = [];
     const wait = time => {
       return new Promise(resolve => {
-        setTimeout(resolve, time || 900);
+        setTimeout(resolve, time || 300);
       });
     };
 
-    const nun2 = new NunDb(url, user, pwd);
     nun2.watch('some', ({
       value
     }) => {
@@ -101,6 +101,7 @@ describe('Nun-db test', () => {
       nun.setValue('some3', 1)
     ]);
     const keys = await nun.keys();
+    console.log(keys);
     expect(keys.length).to.be.equals(6);
     await Promise.all([
       nun.remove('state'),
@@ -114,7 +115,6 @@ describe('Nun-db test', () => {
   });
 
   it('should watch deleted value', () => {
-    const now = Date.now();
     const values = [];
     const wait = time => {
       return new Promise(resolve => {
@@ -122,22 +122,21 @@ describe('Nun-db test', () => {
       });
     };
 
-    const nun2 = new NunDb(url, user, pwd);
     nun2.watch('someToDelete1', ({
       value
     }) => {
       values.push(value);
     });
-    return wait().then(() => nun.setValue('someToDelete1', 1))
+    return wait(500)
+      .then(() => wait(500))
+      .then(() => nun.setValue('someToDelete1', 1))
       .then(() => nun.setValue('someToDelete1', 2))
       .then(() => nun.remove('someToDelete1'))
-      .then(() => wait()).then(() => {
-        //console.log(JSON.stringify(values), values.length);
+      .then(() => wait(500))
+      .then(() => {
         expect(values.length).to.be.equals(3);
         expect(values).to.be.deep.equals([1, 2, null]);
-        return 1;
       });
-    //.catch(console.error);
   });
 
   it('should store value locally', () => {
