@@ -61,6 +61,7 @@
     db._connection.onclose = db._onClose.bind(db);
     db._connectionListener = connectionListener;
   }
+
   class NunDb {
     constructor(dbUrl, user = "", pwd = "", db, token) {
       this._isArbiter = false;
@@ -416,7 +417,7 @@
     }
 
     valueObjOrPromise(value, key) {
-      if (value.startsWith('$$conflicts_')) {
+      if (value.startsWith('$conflicts_')) {
         return new Promise((resolve, reject) => {
           this.watch(value, e => {
             const parts = (e.value && e.value.split && e.value.split(" ")) || [];
