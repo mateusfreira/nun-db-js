@@ -1,6 +1,6 @@
 {
   "name": "nun-db",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "JS drive for nun-db",
   "main": "index.js",
   "directories": {
