@@ -47,7 +47,7 @@ export function useNunDbFeatureFlagsReRender() {
   });
 }
 export function reEvalFeatures() {
-    console.log(`reEvalFeatures`);
+    performance.mark('reEvalFeatures-called');
     evalFeatures(valueHolder.features);
 }
 
