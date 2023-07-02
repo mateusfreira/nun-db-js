@@ -29,10 +29,11 @@ const Footer = (props) => {
       {
         !!completedCount &&
         <button
+          data-feature="clearComplete"
           className="clear-completed"
           onClick={onClearCompleted}
         >Clear completed</button>
-        
+
       }
     </footer>
   )

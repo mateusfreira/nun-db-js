@@ -2,13 +2,15 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import Footer from './Footer'
 import VisibleTodoList from '../containers/VisibleTodoList'
+import { useNunDbFeatureFlagsReRender } from '../nun';
 
-const MainSection = ({ todosCount, completedCount, actions }) =>
-  (
+const MainSection = ({ todosCount, completedCount, actions }) => {
+  useNunDbFeatureFlagsReRender();
+  return (
     <section className="main">
       {
-        !!todosCount && 
-        <span>
+        !!todosCount &&
+        <span data-feature="toogleAll">
           <input
             className="toggle-all"
             type="checkbox"
@@ -29,6 +31,7 @@ const MainSection = ({ todosCount, completedCount, actions }) =>
       }
     </section>
   )
+}
 
 MainSection.propTypes = {
   todosCount: PropTypes.number.isRequired,
