@@ -63,28 +63,40 @@
   }
 
   class NunDb {
-    constructor(dbUrl, user = "", pwd = "", db, token) {
+    constructor(...args) {
+
       this._isArbiter = false;
       this._shouldReConnect = true;
       this._resolveCallback = null;
       this._start = Date.now();
       this._messages = 0;
-      this._databaseUrl = dbUrl;
-      this.connect();
       this._watchers = {};
       this._ids = [];
       this._pendingPromises = [];
-      this._name = `db:${this._databaseUrl}`;
-
-      if (!db && !token) {
-        this._db = user;
-        this._token = pwd;
+      if (typeof args[0] === 'object') {
+        const props = args[0];
+        this._databaseUrl = props.url;
+        this._db = props.db;
+        this._user = props.user;
+        this._pwd = props.pwd;
+        this._token = props.token;
       } else {
-        this._user = user;
-        this._pwd = pwd;
-        this._db = db;
-        this._token = token;
+        const [dbUrl, user, pwd, db, token] = args;
+        this._databaseUrl = dbUrl;
+        if (!db && !token) {
+          this._db = user;
+          this._token = pwd;
+        } else if (db) {
+          this._db = user;
+          this._user = pwd;
+          this._token = db;
+        } else {
+          this._db = db;
+          this._token = token;
+        }
       }
+      this._name = `db:${this._databaseUrl}`;
+      this.connect();
     }
 
     connect() {
@@ -92,10 +104,10 @@
         this._connection = new _webSocket(this._databaseUrl);
         setupEvents(this, {
           connectReady: () => {
-            if (this._user && this._pwd)
+            if (this._user && this._pwd) {
               this.auth(this._user, this._pwd);
-            else {
-              this.useDb(this._db, this._token);
+            } else {
+              this.useDb(this._db, this._token, this._user);
               resolve();
             }
           },
@@ -177,8 +189,9 @@
       this._connection && this._connection.send(`auth ${user} ${pwd}`);
     }
 
-    useDb(db, token) {
-      this._connection && this._connection.send(`use-db ${db} ${token}`);
+    useDb(db, token, user = undefined) {
+      const command = user ?  `use-db ${db} ${user} ${token}` : `use-db ${db} ${token}`;
+      this._connection && this._connection.send(command);
     }
 
 
@@ -466,6 +479,9 @@
 
     _changedHandler() {
       // Legacy method no action needed
+    }
+    _removedHandler() {
+      // Call subscribers from remove?
     }
     _changedVersionHandler(event) {
       const [key, rest] = event.split(/\s(.+)/);

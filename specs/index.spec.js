@@ -1,9 +1,9 @@
 const url = "wss://ws-staging.nundb.org";
 //const url = "ws://localhost:3058";
-const user = "sample-test";
+const dbName = "sample-test";
 const pwd = "sample-pwd";
-const nun2 = new NunDb(url, user, pwd);
-const nun = new NunDb(url, user, pwd);
+const nun2 = new NunDb(url, dbName, pwd);
+const nun = new NunDb(url, dbName, pwd);
 
 describe('Nun-db test', function() {
   this.timeout(10000);
@@ -12,7 +12,7 @@ describe('Nun-db test', function() {
     return nun.setValue(`some`, now)
       .then(() => nun.getValue(`some`))
       .then(value => {
-        //expect(value).to.be.equal(now);
+        expect(value).to.be.equal(now);
       });
   });
 
@@ -153,5 +153,23 @@ describe('Nun-db test', function() {
       expect(keys).to.be.deep.equals([]);
     });
   })
+
+  it('should connect as a user', async () => {
+    const user = "test-uset";
+    const userPwd = "test-user-pwd";
+    const db = "sample-test";
+    const nunDbUser = new NunDb(url, db, user, userPwd);
+    const keys = await nunDbUser.keys();
+    expect(keys.length).to.be.gt(0);
+  });
+
+  it('should connect as a user using object', async () => {
+    const user = "test-uset";
+    const userPwd = "test-user-pwd";
+    const db = "sample-test";
+    const nunDbUser = new NunDb({ url, db, user, token: userPwd});
+    const keys = await nunDbUser.keys();
+    expect(keys.length).to.be.gt(0);
+  });
 });
 
