@@ -14,25 +14,28 @@ const Footer = (props) => {
   const itemWord = activeCount === 1 ? 'item' : 'items'
   return (
     <footer className="footer">
-      <span className="todo-count">
+      <span className="todo-count" data-feature="reportCompleted">
         <strong>{activeCount || 'No'}</strong> {itemWord} left
       </span>
       <ul className="filters">
         {Object.keys(FILTER_TITLES).map(filter =>
           <li key={filter}>
-            <FilterLink filter={filter}>
-              {FILTER_TITLES[filter]}
-            </FilterLink>
+            <span data-feature={`Show${FILTER_TITLES[filter]}Button`}>
+              <FilterLink filter={filter}>
+                {FILTER_TITLES[filter]}
+              </FilterLink>
+            </span>
           </li>
         )}
       </ul>
       {
         !!completedCount &&
         <button
+          data-feature="clearComplete"
           className="clear-completed"
           onClick={onClearCompleted}
         >Clear completed</button>
-        
+
       }
     </footer>
   )

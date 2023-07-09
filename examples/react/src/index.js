@@ -4,9 +4,11 @@ import { createStore, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
 import App from './components/App';
 import reducer from './reducers';
-import { dbMiddleware  } from './nun';
+import { dbMiddleware, startWatchFeatureFlag, connect } from 'nun-db-react';
 import 'todomvc-app-css/index.css';
 
+connect(React, 'wss://ws.nundb.org', "react", "react-pwd");
+startWatchFeatureFlag();
 const store = createStore(reducer, applyMiddleware(dbMiddleware));
 
 render(<Provider store ={store}>

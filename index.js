@@ -392,7 +392,7 @@
     _keysHandler(keys) {
       const pendingPromise = this._pendingPromises.shift();
       try {
-        pendingPromise && pendingPromise.pedingResolve(keys.split(',').filter(_ => _));
+        pendingPromise && pendingPromise.pedingResolve((keys || '').split(',').filter(_ => _));
       } catch (e) {
         pendingPromise && pendingPromise.pedingReject(e);
       }
@@ -464,6 +464,9 @@
       }
     }
 
+    _changedHandler() {
+      // Legacy method no action needed
+    }
     _changedVersionHandler(event) {
       const [key, rest] = event.split(/\s(.+)/);
       const [version, value] = rest.split(/\s(.+)/);
