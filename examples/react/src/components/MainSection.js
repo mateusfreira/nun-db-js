@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import Footer from './Footer'
 import VisibleTodoList from '../containers/VisibleTodoList'
-import { useNunDbFeatureFlagsReRender } from '../nun';
+import { useNunDbFeatureFlagsReRender } from 'nun-db-react';
 
 const MainSection = ({ todosCount, completedCount, actions }) => {
   useNunDbFeatureFlagsReRender();
