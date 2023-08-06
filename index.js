@@ -151,6 +151,20 @@
       return this.setValueSafe(name, value, -1);
     }
 
+    _createPenddingPromise(key = '', kind = '') {
+        const pendingPromise = {
+          key,
+          kind,
+        };
+        pendingPromise.promise = new Promise((resolve, reject) => {
+          pendingPromise.pedingResolve = (value) => {
+            resolve(value);
+          };
+          pendingPromise.pedingReject = reject;
+        });
+        this._pendingPromises.push(pendingPromise);
+      return pendingPromise;
+    }
     setValueSafe(name, value, _version, basicType) {
       const localValue = getLocalValue(name);
       const objValue = {
@@ -167,17 +181,7 @@
       return this._checkConnectionReady().then(() => {
         const command = `set-safe ${name} ${version} ${ basicType ? value : objToValue(objValue)}`;
         this._connection.send(command);
-        const pendingPromise = {
-          key: name,
-          kind: 'set'
-        };
-        pendingPromise.promise = new Promise((resolve, reject) => {
-          pendingPromise.pedingResolve = (value) => {
-            resolve(value);
-          };
-          pendingPromise.pedingReject = reject;
-        });
-        this._pendingPromises.push(pendingPromise);
+        const pendingPromise = this._createPenddingPromise(name, 'set');
         return pendingPromise.promise.then(()=> objValue);
       });
     }
@@ -238,17 +242,7 @@
     getValue(key) {
       return this._checkConnectionReady().then(() => {
         this._connection.send(`get ${key}`);
-        const pendingPromise = {
-          key,
-          kind: 'get'
-        };
-        pendingPromise.promise = new Promise((resolve, reject) => {
-          pendingPromise.pedingResolve = (value) => {
-            resolve(value);
-          };
-          pendingPromise.pedingReject = reject;
-        });
-        this._pendingPromises.push(pendingPromise);
+        const pendingPromise = this._createPenddingPromise(key, 'get');
         return pendingPromise.promise;
       });
     }
@@ -256,17 +250,7 @@
     getValueSafe(key) {
       return this._checkConnectionReady().then(() => {
         this._connection.send(`get-safe ${key}`);
-        const pendingPromise = {
-          key,
-          kind: 'get-safe'
-        };
-        pendingPromise.promise = new Promise((resolve, reject) => {
-          pendingPromise.pedingResolve = (value) => {
-            resolve(value);
-          };
-          pendingPromise.pedingReject = reject;
-        });
-        this._pendingPromises.push(pendingPromise);
+        const pendingPromise = this._createPenddingPromise(key, 'get-safe');
         return pendingPromise.promise;
       });
     }
@@ -274,12 +258,7 @@
     keys(prefix = '') {
       return this._checkConnectionReady().then(() => {
         this._connection.send(`keys ${prefix}`);
-        const pendingPromise = {};
-        pendingPromise.promise = new Promise((resolve, reject) => {
-          pendingPromise.pedingResolve = resolve;
-          pendingPromise.pedingReject = reject;
-        });
-        this._pendingPromises.push(pendingPromise);
+        const pendingPromise = this._createPenddingPromise(prefix, 'keys');
         return pendingPromise.promise;
       });
     }
@@ -382,6 +361,9 @@
 
     _valueHandler(value) {
       const pendingPromise = this._pendingPromises.shift();
+      if(['get', 'get-safe'].indexOf(pendingPromise.kind)) {
+        throw Error('Invalid resolved promise!`');
+      }
       try {
         const jsonValue = value !== EMPTY ? valueToObj(value) : null;
         const valueToSend = jsonValue && jsonValue.value ? jsonValue.value : jsonValue;

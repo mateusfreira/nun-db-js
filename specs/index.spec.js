@@ -1,5 +1,5 @@
-const url = "wss://ws-staging.nundb.org";
-//const url = "ws://localhost:3058";
+//const url = "wss://ws-staging.nundb.org";
+const url = "ws://localhost:3012";
 const dbName = "sample-test";
 const pwd = "sample-pwd";
 const nun2 = new NunDb(url, dbName, pwd);
@@ -8,7 +8,7 @@ const nun = new NunDb(url, dbName, pwd);
 nun._logger = console;
 
 describe('Nun-db test', function() {
-  this.timeout(10000);
+  this.timeout(1000);
   it('should set value to a key', () => {
     const now = Date.now();
     return nun.setValue(`some`, now)
