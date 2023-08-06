@@ -1,4 +1,5 @@
 # This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+#
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
 name: Node.js CI
@@ -25,6 +26,8 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+    - run: docker run -d --env NUN_USER=js --env NUN_PWD=js --env NUN_DBS_DIR="/data" --mount type=bind,source="/tmp",target=/data -it --rm -p 3013:3013 -p 3012:3012 -p 3014:3014 --name nun-test mateusfreira/nun-db
+    - run: docker exec -it nun-test  /bin/sh -c "nun-db -u user-name -p user-pwd create-db -d sample -t sample-pwd && nun-db -u user-name -p user-pwd exec 'use sample sample-pwd; create-user server server-pwd;create-user client client-pwd;'"
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
