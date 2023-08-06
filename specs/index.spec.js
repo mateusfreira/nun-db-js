@@ -1,6 +1,6 @@
 //const url = "wss://ws-staging.nundb.org";
 const url = "ws://localhost:3012";
-const dbName = "sample-test";
+const dbName = "sample";
 const pwd = "sample-pwd";
 const nun2 = new NunDb(url, dbName, pwd);
 nun2._logger = console;
