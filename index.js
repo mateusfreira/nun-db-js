@@ -60,6 +60,17 @@
     db._connection.onerror = db._onError.bind(db, connectionListener);
     db._connection.onclose = db._onClose.bind(db);
     db._connectionListener = connectionListener;
+    const oldSend = db._connection.send;
+    db._connection.send = function() {
+      db._logger.log('Message Sent', arguments, { promiosesQueue : db._pendingPromises.length });
+      if (db._connection.readyState === 1) {
+        oldSend.apply(db._connection, arguments);
+      } else {
+        db._logger.error('Connection is not ready');
+        throw new Error('Connection is not ready');
+      }
+    }
+
   }
 
   class NunDb {
@@ -131,6 +142,7 @@
       //No action needed here
     }
     messageHandler(message) {
+      this._logger.log('Message received', message.data);
       const messageParts = message.data.split(/\s(.+)|\n/);
       const [command, value] = messageParts;
       const commandMethodName = commandToFuncion(command);
@@ -216,6 +228,8 @@
     useDb(db, token, user = undefined) {
       const command = user ? `use-db ${db} ${user} ${token}` : `use-db ${db} ${token}`;
       this._connection && this._connection.send(command);
+      const pendingPromise = this._createPenddingPromise(name, 'use-db');
+      return pendingPromise.promise;
     }
 
 
@@ -250,6 +264,12 @@
     getValueSafe(key) {
       return this._checkConnectionReady().then(() => {
         this._connection.send(`get-safe ${key}`);
+        /**
+         * Get safe returns an ok saying that the message was received,
+         * latter it sends the value message with the the real value
+         * that is why we nee 2 promises here, no need to wait for the first one tho
+         */
+        const _pendingPromiseAck = this._createPenddingPromise(key, 'get-safe-sent');
         const pendingPromise = this._createPenddingPromise(key, 'get-safe');
         return pendingPromise.promise;
       });
@@ -426,7 +446,7 @@
     errorPermissionDenied(error) {
       const pendingPromise = this._pendingPromises.shift();
       this._logger.log(`errorPermissionDenied`, pendingPromise);
-      pendingPromise && pendingPromise.pedingReject(error);
+      pendingPromise && pendingPromise.pedingReject(new Error(error));
     }
     _errorHandler(error) {
       this._logger.log(`_errorHandler`, error);
@@ -441,8 +461,8 @@
     }
     _okHandler() {
       const nextPromise = this._pendingPromises[0];
-      this._logger.log(nextPromise);
-      if(nextPromise && nextPromise.kind === 'set') {
+      this._logger.log('Will resolve the promise', nextPromise);
+      if(['set', 'use-db', 'get-safe-sent'].indexOf(nextPromise && nextPromise.kind) != -1) {
         const pendingPromise = this._pendingPromises.shift();
         pendingPromise && pendingPromise.pedingResolve ();
       }

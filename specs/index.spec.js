@@ -14,6 +14,7 @@ describe('Nun-db test', function() {
     return nun.setValue(`some`, now)
       .then(() => nun.getValue(`some`))
       .then(value => {
+        console.log(value);
         expect(value).to.be.equal(now);
       });
   });
@@ -197,7 +198,7 @@ describe('Nun-db test', function() {
       await nunDb.set("name", "Jose");
        throw new Error("Should not be here");
      } catch(e) {
-       expect(e.message).to.be.equals("Permission denied");
+       expect(e.message).to.be.equals("permission denied");
      }
    });
 });

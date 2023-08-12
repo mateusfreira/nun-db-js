@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "./node_modules/.bin/karma start --single-run --browsers ChromeHeadless",
-    "test-watch": "./node_modules/.bin/karma start --browsers ChromeHeadless"
+    "test-watch": "./node_modules/.bin/karma start --browsers ChromeHeadless",
+    "test-watch-ui": "./node_modules/.bin/karma start --browsers Chrome"
   },
   "repository": {
     "type": "git",
