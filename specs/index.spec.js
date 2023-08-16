@@ -1,5 +1,5 @@
 //const url = "wss://ws-staging.nundb.org";
-const url = "ws://localhost:3012";
+const url = "ws://localhost:3058";
 const dbName = "sample";
 const pwd = "sample-pwd";
 const nun2 = new NunDb(url, dbName, pwd);
@@ -20,7 +20,7 @@ describe('Nun-db test', function() {
   });
 
 
-  it('should watch a value', ()=> {
+  it('should watch a value', () => {
     const values = [];
     const wait = time => {
       return new Promise(resolve => {
@@ -172,34 +172,52 @@ describe('Nun-db test', function() {
     const user = "test-uset";
     const userPwd = "test-user-pwd";
     const db = "sample-test";
-    const nunDbUser = new NunDb({ url, db, user, token: userPwd});
+    const nunDbUser = new NunDb({
+      url,
+      db,
+      user,
+      token: userPwd
+    });
     const keys = await nunDbUser.keys();
     expect(keys.length).to.be.gt(0);
   });
 
   it('should reject set if permission denied', async () => {
-    const user = "test-uset";
-    const userPwd = "test-user-pwd";
-    const db = "sample-test";
-    const nunDbUser = new NunDb({ url, db, user, token: userPwd});
+    const user = "client";
+    const userPwd = "client-pwd";
+    const db = "sample";
+    const nunDbUser = new NunDb({
+      url,
+      db,
+      user,
+      token: userPwd
+    });
+    //nunDbUser._logger = console;
     try {
       await nunDbUser.setValue('some', 1);
       fail('should not be here');
     } catch (e) {
-       expect(e.message).to.be.equals("Permission denied");
+      expect(e.message).to.be.equals("permission denied");
     }
   });
-   it('should reject set if permission denied local user', async () => {
-     const nunDb = new NunDb({ url: "ws://localhost:3012", db: "sample", user: "client", token: "client-pwd"});
-     nunDb._logger = console;
-     const keys  = await nunDb.keys();
-     const value = await nunDb.get("name");
-     try {
+
+  it('should reject set if permission denied local user', async () => {
+    const nunDb = new NunDb({
+      url,
+      db: "sample",
+      user: "client",
+      token: "client-pwd"
+    });
+    //nunDb._logger = console;
+    const keys = await nunDb.keys();
+    const value = await nunDb.get("name");
+    try {
       await nunDb.set("name", "Jose");
-       throw new Error("Should not be here");
-     } catch(e) {
-       expect(e.message).to.be.equals("permission denied");
-     }
-   });
+      throw new Error("Should not be here");
+    } catch (e) {
+      expect(e.message).to.be.equals("permission denied");
+    }
+  });
+
 });
 

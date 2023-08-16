@@ -62,7 +62,7 @@
     db._connectionListener = connectionListener;
     const oldSend = db._connection.send;
     db._connection.send = function() {
-      db._logger.log('Message Sent', arguments, { promiosesQueue : db._pendingPromises.length });
+      db._logger.log('Message Sent', arguments, { promiosesQueue : db._pendingPromises });
       if (db._connection.readyState === 1) {
         oldSend.apply(db._connection, arguments);
       } else {
@@ -112,6 +112,16 @@
       }
       this._name = `db:${this._databaseUrl}`;
       this.connect();
+    }
+
+    _dequeuePromise() {
+      if (this._pendingPromises.length) {
+        const promise = this._pendingPromises.shift();
+        this._logger.log('De-queueing promise: ', promise.kind);
+        return promise;
+      } else {
+        this._logger.error('No promises in de-queue');
+      }
     }
 
     connect() {
@@ -177,6 +187,7 @@
         this._pendingPromises.push(pendingPromise);
       return pendingPromise;
     }
+
     setValueSafe(name, value, _version, basicType) {
       const localValue = getLocalValue(name);
       const objValue = {
@@ -228,7 +239,7 @@
     useDb(db, token, user = undefined) {
       const command = user ? `use-db ${db} ${user} ${token}` : `use-db ${db} ${token}`;
       this._connection && this._connection.send(command);
-      const pendingPromise = this._createPenddingPromise(name, 'use-db');
+      const pendingPromise = this._createPenddingPromise(db, 'use-db');
       return pendingPromise.promise;
     }
 
@@ -264,14 +275,15 @@
     getValueSafe(key) {
       return this._checkConnectionReady().then(() => {
         this._connection.send(`get-safe ${key}`);
+        const pendingPromise = this._createPenddingPromise(key, 'get-safe');
+
         /**
          * Get safe returns an ok saying that the message was received,
          * latter it sends the value message with the the real value
          * that is why we nee 2 promises here, no need to wait for the first one tho
          */
         const _pendingPromiseAck = this._createPenddingPromise(key, 'get-safe-sent');
-        const pendingPromise = this._createPenddingPromise(key, 'get-safe');
-        return pendingPromise.promise;
+        return Promise.all([pendingPromise.promise, _pendingPromiseAck.promise]).then(values => values[0]);
       });
     }
 
@@ -279,7 +291,8 @@
       return this._checkConnectionReady().then(() => {
         this._connection.send(`keys ${prefix}`);
         const pendingPromise = this._createPenddingPromise(prefix, 'keys');
-        return pendingPromise.promise;
+        const _pendingPromise = this._createPenddingPromise(prefix, 'keys-sent');
+        return Promise.all([pendingPromise.promise, _pendingPromise.promise]).then(values => values[0]);
       });
     }
 
@@ -347,14 +360,15 @@
       }
       return this._checkConnectionReady().then(() => {
         this._connection.send(`watch ${name}`);
+        const _pendingPromise = this._createPenddingPromise(name, 'watch-sent');
         this._watchers[name] = this._watchers[name] || [];
         this._watchers[name].push(callback);
         if (currentValue) {
-          this.getValueSafe(name).then((e) => (!e.value || e.value !== localValue) && callback({
+          _pendingPromise.promise.then(() => this.getValueSafe(name).then((e) => (!e.value || e.value !== localValue) && callback({
             name,
             value: e.value,
             version: e.version
-          }));
+          })));
         }
 
       });
@@ -380,8 +394,8 @@
     }
 
     _valueHandler(value) {
-      const pendingPromise = this._pendingPromises.shift();
-      if(['get', 'get-safe'].indexOf(pendingPromise.kind)) {
+      const pendingPromise = this._dequeuePromise();
+      if(['get', 'get-safe', 'keys-sent'].indexOf(pendingPromise.kind)) {
         throw Error('Invalid resolved promise!`');
       }
       try {
@@ -397,7 +411,7 @@
     _valueVersionHandler(valueServer) {
       const valueParts = valueServer.split(/\s(.+)/);
       const [version, value] = valueParts;
-      const pendingPromise = this._pendingPromises.shift();
+      const pendingPromise = this._dequeuePromise();
       try {
         const jsonValue = value !== EMPTY ? valueToObj(value) : null;
         const valueToSend = jsonValue && jsonValue.value ? jsonValue.value : jsonValue;
@@ -425,7 +439,7 @@
     }
 
     _keysHandler(keys) {
-      const pendingPromise = this._pendingPromises.shift();
+      const pendingPromise = this._dequeuePromise();
       try {
         pendingPromise && pendingPromise.pedingResolve((keys || '').split(',').filter(_ => _));
       } catch (e) {
@@ -444,7 +458,7 @@
     }
 
     errorPermissionDenied(error) {
-      const pendingPromise = this._pendingPromises.shift();
+      const pendingPromise = this._dequeuePromise();
       this._logger.log(`errorPermissionDenied`, pendingPromise);
       pendingPromise && pendingPromise.pedingReject(new Error(error));
     }
@@ -462,9 +476,11 @@
     _okHandler() {
       const nextPromise = this._pendingPromises[0];
       this._logger.log('Will resolve the promise', nextPromise);
-      if(['set', 'use-db', 'get-safe-sent'].indexOf(nextPromise && nextPromise.kind) != -1) {
-        const pendingPromise = this._pendingPromises.shift();
+      if(['set', 'use-db', 'get-safe-sent', 'keys-sent', 'watch-sent'].indexOf(nextPromise && nextPromise.kind) != -1) {
+        const pendingPromise = this._dequeuePromise();
         pendingPromise && pendingPromise.pedingResolve ();
+      } else {
+        this._logger.log('Will ignore the message', nextPromise?.kind);
       }
       //@todo resouve and promise if pedding
     }
