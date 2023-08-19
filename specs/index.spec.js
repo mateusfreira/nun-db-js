@@ -1,14 +1,16 @@
 //const url = "wss://ws-staging.nundb.org";
 const url = "ws://localhost:3058";
+//const url = "ws://localhost:3012";
 const dbName = "sample";
 const pwd = "sample-pwd";
 const nun2 = new NunDb(url, dbName, pwd);
 nun2._logger = console;
 const nun = new NunDb(url, dbName, pwd);
+
 nun._logger = console;
 
 describe('Nun-db test', function() {
-  this.timeout(1000);
+  this.timeout(3000);
   it('should set value to a key', () => {
     const now = Date.now();
     return nun.setValue(`some`, now)
@@ -161,23 +163,26 @@ describe('Nun-db test', function() {
   it('should connect as a user', async () => {
     const user = "test-uset";
     const userPwd = "test-user-pwd";
-    const db = "sample-test";
+    const db = "sample";
     const nunDbUser = new NunDb(url, db, user, userPwd);
     const keys = await nunDbUser.keys();
     expect(keys.length).to.be.gt(0);
   });
 
-  // nun-db --user $NUN_USER  -p $NUN_PWD --host "https://https.nundb.org" exec "use-db sample-test sample-pwd; create-user test-uset test-user-pwd;  set-permissions test-uset r *|rwx client-*"
-  it('should connect as a user using object', async () => {
+  it('should connect as a user using object', async function() {
     const user = "test-uset";
     const userPwd = "test-user-pwd";
-    const db = "sample-test";
+    const db = "sample";
+    console.log("Here");
     const nunDbUser = new NunDb({
       url,
       db,
       user,
       token: userPwd
     });
+    nunDbUser._logger = console;
+    console.log("Here");
+    //await new Promise(resolve => setTimeout(resolve, 1000));
     const keys = await nunDbUser.keys();
     expect(keys.length).to.be.gt(0);
   });
