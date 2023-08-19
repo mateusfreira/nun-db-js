@@ -7,7 +7,8 @@ import reducer from './reducers';
 import { dbMiddleware, startWatchFeatureFlag, connect } from 'nun-db-react';
 import 'todomvc-app-css/index.css';
 
-connect(React, 'wss://ws-staging.nundb.org', "react", "react-pwd");
+//connect(React, 'wss://ws-staging.nundb.org', "react", "react-pwd");
+connect(React, 'ws://localhost:3058', "react", "react-pwd");
 startWatchFeatureFlag();
 const store = createStore(reducer, applyMiddleware(dbMiddleware));
 
