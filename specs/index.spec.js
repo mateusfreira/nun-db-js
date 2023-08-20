@@ -173,7 +173,6 @@ describe('Nun-db test', function() {
     const user = "test-uset";
     const userPwd = "test-user-pwd";
     const db = "sample";
-    console.log("Here");
     const nunDbUser = new NunDb({
       url,
       db,
@@ -181,8 +180,6 @@ describe('Nun-db test', function() {
       token: userPwd
     });
     nunDbUser._logger = console;
-    console.log("Here");
-    //await new Promise(resolve => setTimeout(resolve, 1000));
     const keys = await nunDbUser.keys();
     expect(keys.length).to.be.gt(0);
   });
