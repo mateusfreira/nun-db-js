@@ -82,7 +82,8 @@ const dbMiddleware = store => {
         const actionToTrigger = { ignoreSave: true, ...action.value};
         store.dispatch(actionToTrigger);
     });
-    nun.getValue('lastState').then(state => {
+    nun.getValue('lastState').then(_state => {
+    const state = _state || {};
         store.dispatch({ type: 'newState', state   });
     });
     return next => (action) => {

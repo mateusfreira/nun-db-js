@@ -1,22 +1,28 @@
-const url = "wss://ws-staging.nundb.org";
+//const url = "wss://ws-staging.nundb.org";
 //const url = "ws://localhost:3058";
-const dbName = "sample-test";
+const url = "ws://localhost:3012";
+const dbName = "sample";
 const pwd = "sample-pwd";
 const nun2 = new NunDb(url, dbName, pwd);
+nun2._logger = console;
 const nun = new NunDb(url, dbName, pwd);
 
+nun._logger = console;
+
 describe('Nun-db test', function() {
-  this.timeout(10000);
+  this.timeout(3000);
   it('should set value to a key', () => {
     const now = Date.now();
     return nun.setValue(`some`, now)
       .then(() => nun.getValue(`some`))
       .then(value => {
+        console.log(value);
         expect(value).to.be.equal(now);
       });
   });
 
-  it('should watch a value', ()=> {
+
+  it('should watch a value', () => {
     const values = [];
     const wait = time => {
       return new Promise(resolve => {
@@ -157,19 +163,63 @@ describe('Nun-db test', function() {
   it('should connect as a user', async () => {
     const user = "test-uset";
     const userPwd = "test-user-pwd";
-    const db = "sample-test";
+    const db = "sample";
     const nunDbUser = new NunDb(url, db, user, userPwd);
     const keys = await nunDbUser.keys();
     expect(keys.length).to.be.gt(0);
   });
 
-  it('should connect as a user using object', async () => {
+  it('should connect as a user using object', async function() {
     const user = "test-uset";
     const userPwd = "test-user-pwd";
-    const db = "sample-test";
-    const nunDbUser = new NunDb({ url, db, user, token: userPwd});
+    const db = "sample";
+    const nunDbUser = new NunDb({
+      url,
+      db,
+      user,
+      token: userPwd
+    });
+    nunDbUser._logger = console;
     const keys = await nunDbUser.keys();
     expect(keys.length).to.be.gt(0);
   });
+
+  it('should reject set if permission denied', async () => {
+    const user = "client";
+    const userPwd = "client-pwd";
+    const db = "sample";
+    const nunDbUser = new NunDb({
+      url,
+      db,
+      user,
+      token: userPwd
+    });
+    //nunDbUser._logger = console;
+    try {
+      await nunDbUser.setValue('some', 1);
+      fail('should not be here');
+    } catch (e) {
+      expect(e.message).to.be.equals("permission denied");
+    }
+  });
+
+  it('should reject set if permission denied local user', async () => {
+    const nunDb = new NunDb({
+      url,
+      db: "sample",
+      user: "client",
+      token: "client-pwd"
+    });
+    //nunDb._logger = console;
+    const keys = await nunDb.keys();
+    const value = await nunDb.get("name");
+    try {
+      await nunDb.set("name", "Jose");
+      throw new Error("Should not be here");
+    } catch (e) {
+      expect(e.message).to.be.equals("permission denied");
+    }
+  });
+
 });
 

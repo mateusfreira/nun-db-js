@@ -12,7 +12,7 @@ const initialState = []
 export default function todos(state = initialState, action) {
   switch (action.type) {
     case 'newState':
-      return action.state.todos;
+      return (action && action.state && action.state.todos) || [] ;
     case ADD_TODO:
       return [
         ...state,

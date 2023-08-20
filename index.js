@@ -60,11 +60,26 @@
     db._connection.onerror = db._onError.bind(db, connectionListener);
     db._connection.onclose = db._onClose.bind(db);
     db._connectionListener = connectionListener;
+    const oldSend = db._connection.send;
+    db._connection.send = function() {
+      db._logger.log('Message Sent', arguments, { promiosesQueue : db._pendingPromises });
+      if (db._connection.readyState === 1) {
+        oldSend.apply(db._connection, arguments);
+      } else {
+        db._logger.error('Connection is not ready');
+        throw new Error('Connection is not ready');
+      }
+    }
+
   }
 
   class NunDb {
     constructor(...args) {
+      this._logger = {
+        log: () => {},
+        error: () => {}
 
+      };
       this._isArbiter = false;
       this._shouldReConnect = true;
       this._resolveCallback = null;
@@ -99,8 +114,19 @@
       this.connect();
     }
 
+    _dequeuePromise() {
+      if (this._pendingPromises.length) {
+        const promise = this._pendingPromises.shift();
+        this._logger.log('De-queueing promise: ', promise.kind);
+        return promise;
+      } else {
+        this._logger.error('No promises in de-queue');
+      }
+    }
+
     connect() {
       this._connectionPromise = new Promise((resolve, reject) => {
+        this._logger.log('Connecting to', this._databaseUrl);
         this._connection = new _webSocket(this._databaseUrl);
         setupEvents(this, {
           connectReady: () => {
@@ -119,10 +145,14 @@
           connectionError: reject
         });
       });
-      return this._connectionPromise.then(() => (this._connected = true)).catch(console.error);
+      return this._connectionPromise.then(() => (this._connected = true)).catch(this._logger.error);
     }
 
+    _permissionHandler(value) {
+      //No action needed here
+    }
     messageHandler(message) {
+      this._logger.log('Message received', message.data);
       const messageParts = message.data.split(/\s(.+)|\n/);
       const [command, value] = messageParts;
       const commandMethodName = commandToFuncion(command);
@@ -130,7 +160,7 @@
       if (this[methodName]) {
         this[methodName](value);
       } else {
-        console.error(`${commandMethodName} Handler not implemented`);
+        this._logger.error(`${commandMethodName} Handler not implemented`);
       }
     }
 
@@ -141,6 +171,21 @@
 
     setValue(name, value) {
       return this.setValueSafe(name, value, -1);
+    }
+
+    _createPenddingPromise(key = '', kind = '') {
+        const pendingPromise = {
+          key,
+          kind,
+        };
+        pendingPromise.promise = new Promise((resolve, reject) => {
+          pendingPromise.pedingResolve = (value) => {
+            resolve(value);
+          };
+          pendingPromise.pedingReject = reject;
+        });
+        this._pendingPromises.push(pendingPromise);
+      return pendingPromise;
     }
 
     setValueSafe(name, value, _version, basicType) {
@@ -157,8 +202,10 @@
       });
       this._ids.push(objValue._id);
       return this._checkConnectionReady().then(() => {
-          const command = `set-safe ${name} ${version} ${ basicType ? value : objToValue(objValue)}`;
-          this._connection.send(command);
+        const command = `set-safe ${name} ${version} ${ basicType ? value : objToValue(objValue)}`;
+        this._connection.send(command);
+        const pendingPromise = this._createPenddingPromise(name, 'set');
+        return pendingPromise.promise.then(()=> objValue);
       });
     }
 
@@ -190,8 +237,10 @@
     }
 
     useDb(db, token, user = undefined) {
-      const command = user ?  `use-db ${db} ${user} ${token}` : `use-db ${db} ${token}`;
+      const command = user ? `use-db ${db} ${user} ${token}` : `use-db ${db} ${token}`;
       this._connection && this._connection.send(command);
+      const pendingPromise = this._createPenddingPromise(db, 'use-db');
+      return pendingPromise.promise;
     }
 
 
@@ -218,17 +267,7 @@
     getValue(key) {
       return this._checkConnectionReady().then(() => {
         this._connection.send(`get ${key}`);
-        const pendingPromise = {
-          key,
-          kind: 'get'
-        };
-        pendingPromise.promise = new Promise((resolve, reject) => {
-          pendingPromise.pedingResolve = (value) => {
-            resolve(value);
-          };
-          pendingPromise.pedingReject = reject;
-        });
-        this._pendingPromises.push(pendingPromise);
+        const pendingPromise = this._createPenddingPromise(key, 'get');
         return pendingPromise.promise;
       });
     }
@@ -236,37 +275,30 @@
     getValueSafe(key) {
       return this._checkConnectionReady().then(() => {
         this._connection.send(`get-safe ${key}`);
-        const pendingPromise = {
-          key,
-          kind: 'get-safe'
-        };
-        pendingPromise.promise = new Promise((resolve, reject) => {
-          pendingPromise.pedingResolve = (value) => {
-            resolve(value);
-          };
-          pendingPromise.pedingReject = reject;
-        });
-        this._pendingPromises.push(pendingPromise);
-        return pendingPromise.promise;
+        const pendingPromise = this._createPenddingPromise(key, 'get-safe');
+
+        /**
+         * Get safe returns an ok saying that the message was received,
+         * latter it sends the value message with the the real value
+         * that is why we nee 2 promises here, no need to wait for the first one tho
+         */
+        const _pendingPromiseAck = this._createPenddingPromise(key, 'get-safe-sent');
+        return Promise.all([pendingPromise.promise, _pendingPromiseAck.promise]).then(values => values[0]);
       });
     }
 
     keys(prefix = '') {
       return this._checkConnectionReady().then(() => {
         this._connection.send(`keys ${prefix}`);
-        const pendingPromise = {};
-        pendingPromise.promise = new Promise((resolve, reject) => {
-          pendingPromise.pedingResolve = resolve;
-          pendingPromise.pedingReject = reject;
-        });
-        this._pendingPromises.push(pendingPromise);
-        return pendingPromise.promise;
+        const pendingPromise = this._createPenddingPromise(prefix, 'keys');
+        const _pendingPromise = this._createPenddingPromise(prefix, 'keys-sent');
+        return Promise.all([pendingPromise.promise, _pendingPromise.promise]).then(values => values[0]);
       });
     }
 
     _onError(connectionListener, error) {
       if (this._connected) {
-        console.error(`WS error`, error);
+        this._logger.error(`WS error`, error);
       } else {
         connectionListener.connectionError();
       }
@@ -277,13 +309,13 @@
         this.connect()
           .then(() => {
             if (this._connected) {
-              console.log(this._name, 'Reconnected');
+              this._logger.log(this._name, 'Reconnected');
               this._checkArbiter();
               this._rewatch();
               this._pushPneeding()
             }
           })
-          .catch(console.error.bind(console, 'Error reconecting'));
+          .catch(this._logger.error.bind(console, 'Error reconecting'));
       }
     }
     _onClose(connectionListener, error) {
@@ -328,14 +360,15 @@
       }
       return this._checkConnectionReady().then(() => {
         this._connection.send(`watch ${name}`);
+        const _pendingPromise = this._createPenddingPromise(name, 'watch-sent');
         this._watchers[name] = this._watchers[name] || [];
         this._watchers[name].push(callback);
         if (currentValue) {
-          this.getValueSafe(name).then((e) => (!e.value || e.value !== localValue) && callback({
+          _pendingPromise.promise.then(() => this.getValueSafe(name).then((e) => (!e.value || e.value !== localValue) && callback({
             name,
             value: e.value,
             version: e.version
-          }));
+          })));
         }
 
       });
@@ -361,7 +394,10 @@
     }
 
     _valueHandler(value) {
-      const pendingPromise = this._pendingPromises.shift();
+      const pendingPromise = this._dequeuePromise();
+      if(['get', 'get-safe', 'keys-sent'].indexOf(pendingPromise.kind)) {
+        throw Error('Invalid resolved promise!`');
+      }
       try {
         const jsonValue = value !== EMPTY ? valueToObj(value) : null;
         const valueToSend = jsonValue && jsonValue.value ? jsonValue.value : jsonValue;
@@ -375,7 +411,7 @@
     _valueVersionHandler(valueServer) {
       const valueParts = valueServer.split(/\s(.+)/);
       const [version, value] = valueParts;
-      const pendingPromise = this._pendingPromises.shift();
+      const pendingPromise = this._dequeuePromise();
       try {
         const jsonValue = value !== EMPTY ? valueToObj(value) : null;
         const valueToSend = jsonValue && jsonValue.value ? jsonValue.value : jsonValue;
@@ -403,7 +439,7 @@
     }
 
     _keysHandler(keys) {
-      const pendingPromise = this._pendingPromises.shift();
+      const pendingPromise = this._dequeuePromise();
       try {
         pendingPromise && pendingPromise.pedingResolve((keys || '').split(',').filter(_ => _));
       } catch (e) {
@@ -421,11 +457,31 @@
       this._connectionListener.authFail();
     }
 
+    errorPermissionDenied(error) {
+      const pendingPromise = this._dequeuePromise();
+      this._logger.log(`errorPermissionDenied`, pendingPromise);
+      pendingPromise && pendingPromise.pedingReject(new Error(error));
+    }
     _errorHandler(error) {
+      this._logger.log(`_errorHandler`, error);
       const fnName = commandToFuncion(`error-${error.trim()}`);
-      console.log(`Todo implement error handler ${fnName}`);
+      const fn = this[fnName];
+      if (!fn) {
+        this._logger.log(`Todo implement error handler ${fnName}`);
+      } else {
+        this._logger.log(`Found`, fn);
+        fn.apply(this, [error]);
+      }
     }
     _okHandler() {
+      const nextPromise = this._pendingPromises[0];
+      this._logger.log('Will resolve the promise', nextPromise);
+      if(['set', 'use-db', 'get-safe-sent', 'keys-sent', 'watch-sent'].indexOf(nextPromise && nextPromise.kind) != -1) {
+        const pendingPromise = this._dequeuePromise();
+        pendingPromise && pendingPromise.pedingResolve ();
+      } else {
+        this._logger.log('Will ignore the message', nextPromise?.kind);
+      }
       //@todo resouve and promise if pedding
     }
 
@@ -469,10 +525,10 @@
           })).then(value => {
             const nextVersion = version === IN_CONFLICT_RESOLUTION_KEY_VERSION ? this.nextMessageId() : version;
             const resolveCommand = `resolve ${opp_id} ${db} ${key} ${nextVersion} ${objToValue(value)}`;
-            //console.log(`Resolve ${resolveCommand}`);
+            //this._logger.log(`Resolve ${resolveCommand}`);
             this._connection.send(resolveCommand);
           }).catch(e => {
-            console.log("TOdo needs error Handler here", e); /// GOMG
+            this._logger.log("TOdo needs error Handler here", e); /// GOMG
           })
       }
     }
@@ -504,7 +560,7 @@
             });
           }
         } catch (e) {
-          //console.error(e, { name, value});
+          this._logger.error(e, { name, value});
           watcher({
             name: key,
             value: value,
@@ -512,6 +568,9 @@
           });
         }
       });
+    }
+    _setLoggers(logger) {
+      this._logger = logger;
     }
   }
   return NunDb;

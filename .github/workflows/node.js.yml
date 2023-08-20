@@ -27,7 +27,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: docker run -d --env NUN_USER=js --env NUN_PWD=js --env NUN_DBS_DIR="/data" --mount type=bind,source="/tmp",target=/data -it --rm -p 3013:3013 -p 3012:3012 -p 3014:3014 --name nun-test mateusfreira/nun-db
-    - run: sleep 3 && docker exec nun-test  /bin/sh -c "nun-db -u js -p js create-db -d sample -t sample-pwd && nun-db -u js -p js exec 'use sample sample-pwd; create-user server server-pwd;create-user client client-pwd;'"
+    - run: sleep 3 && docker exec nun-test  /bin/sh -c "nun-db -u js -p js create-db -d sample -t sample-pwd && nun-db -u js -p js exec 'use sample sample-pwd; create-user server server-pwd;create-user client client-pwd; use sample sample-pwd; set-permissions client r *|rwx client-*; use sample sample-pwd; set-permissions server rwx *; create-user test-uset test-user-pwd'"
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
