@@ -315,7 +315,7 @@
               this._pushPneeding()
             }
           })
-          .catch(this._logger.error.bind(console, 'Error reconecting'));
+          .catch(this._logger.error.bind(this._logger, 'Error reconecting'));
       }
     }
     _onClose(connectionListener, error) {
