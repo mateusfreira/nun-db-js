@@ -1,5 +1,6 @@
 //const url = "ws://localhost:3058";
-const url = "wss://ws.nundb.org";
+//const url = "wss://wss.nundb.org";
+const url = "wss://ws-staging.nundb.org";
 const nun = new NunDb(url, "analitcs-blog-new", "analitcs-blog-2903uyi9ewrj-new");
 const dateStr = new Date().toISOString();
 const userId = localStorage.getItem("userId") || `${Date.now()}_${crypto.getRandomValues(new Uint32Array(1))[0]}`;
