@@ -17,8 +17,11 @@ npm install --save nun-db
 //import nundb
 const NunDb = require('nun-db');
 
-//Connect to the databse
-const db = new NunDb('wss://ws.nundb.org/', 'db-name', 'db-token');
+//Connect to the database using db main token
+//const db = new NunDb('wss://ws.nundb.org/', 'db-name', 'db-token');
+
+//Connect to the database limited user
+const db = new NunDb({ url: 'wss://ws.nundb.org/', db: 'db-name', user: 'user-name', token: 'db-token' });
 
 db.setValue('someKey', 'someValue');
 db.set('someKey', 'someValue');//Alias to setValue
