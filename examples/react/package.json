@@ -4,7 +4,7 @@
   "private": true,
   "homepage": "http://127.0.0.1:8080/examples/react/build/",
   "devDependencies": {
-    "react-scripts": "^1.1.5",
+    "react-scripts": "^5.0.1",
     "react-test-renderer": "^16.8.6"
   },
   "dependencies": {
