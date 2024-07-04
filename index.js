@@ -133,8 +133,7 @@
             if (this._user && this._pwd) {
               this.auth(this._user, this._pwd);
             } else {
-              this.useDb(this._db, this._token, this._user);
-              resolve();
+              this.useDb(this._db, this._token, this._user).then(resolve).catch(reject);
             }
           },
           authSuccess: () => {
@@ -462,6 +461,20 @@
       this._logger.log(`errorPermissionDenied`, pendingPromise);
       pendingPromise && pendingPromise.pedingReject(new Error(error));
     }
+
+    errorErrorNoDbSelected(error) {
+      const pendingPromise = this._dequeuePromise();
+      this._logger.log(`errorPermissionDenied`, pendingPromise);
+      pendingPromise && pendingPromise.pedingReject(new Error(error));
+    }
+
+    errorInvalidToken(error) {
+      const pendingPromise = this._dequeuePromise();
+      this._logger.log(`errorPermissionDenied`, pendingPromise);
+      pendingPromise && pendingPromise.pedingReject(new Error(error));
+    }
+
+
     _errorHandler(error) {
       this._logger.log(`_errorHandler`, error);
       const fnName = commandToFuncion(`error-${error.trim()}`);

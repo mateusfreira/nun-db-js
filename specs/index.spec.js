@@ -184,6 +184,25 @@ describe('Nun-db test', function() {
     expect(keys.length).to.be.gt(0);
   });
 
+  it('should reject if user does not exists', async () => {
+    const user = "client-will-never-exisrts";
+    const userPwd = "client-pwd";
+    const db = "sample";
+    const nunDbUser = new NunDb({
+      url,
+      db,
+      user,
+      token: userPwd
+    });
+    nunDbUser._logger = console;
+    try {
+      await nunDbUser.setValue('some', 1);
+      fail('should not be here');
+    } catch (e) {
+      expect(e.message).to.be.equals("Invalid token ");
+    }
+  });
+
   it('should reject set if permission denied', async () => {
     const user = "client";
     const userPwd = "client-pwd";
@@ -194,7 +213,7 @@ describe('Nun-db test', function() {
       user,
       token: userPwd
     });
-    //nunDbUser._logger = console;
+    nunDbUser._logger = console;
     try {
       await nunDbUser.setValue('some', 1);
       fail('should not be here');
