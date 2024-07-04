@@ -134,8 +134,6 @@
               this.auth(this._user, this._pwd);
             } else {
               this.useDb(this._db, this._token, this._user).then(resolve).catch(reject);
-              //this.useDb(this._db, this._token, this._user);
-              //resolve();
             }
           },
           authSuccess: () => {
