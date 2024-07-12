@@ -37,6 +37,17 @@
   }
 
 
+  function resolvePeddingValue(key, version) {
+    const localValue = memoryDb.get(key);
+    console.log('Resolve pedding value', key, version, localValue)
+    if (localValue && localValue.pendding && localValue.version === version) {
+      storeLocalValue(key, {
+        value: localValue.value,
+        version,
+        pendding: false
+      });
+    }
+  }
   function storeLocalValue(key, value) {
     if (shouldSoreLocal) {
       localStorage.setItem(`nundb_${key}`, JSON.stringify(value));
@@ -204,7 +215,10 @@
         const command = `set-safe ${name} ${version} ${ basicType ? value : objToValue(objValue)}`;
         this._connection.send(command);
         const pendingPromise = this._createPenddingPromise(name, 'set');
-        return pendingPromise.promise.then(()=> objValue);
+        return pendingPromise.promise.then(()=> {
+          resolvePeddingValue(name, version);
+          return objValue;
+        });
       });
     }
 
@@ -586,6 +600,7 @@
       this._logger = logger;
     }
   }
+  NunDb.inMemoryDb = memoryDb;
   return NunDb;
 }));
 
