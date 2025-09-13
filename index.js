@@ -350,6 +350,10 @@
       this._connection.close();
     }
 
+    close() {
+      this.goOffline();
+    }
+
     goOnline() {
       this._shouldReConnect = true;
       this.reConnect();
