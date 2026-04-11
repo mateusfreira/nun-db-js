@@ -28,7 +28,7 @@ declare class NunDb {
 
   setValue<T = any>(key: string, value: T): Promise<SetValueResult<T>>;
   set<T = any>(key: string, value: T): Promise<SetValueResult<T>>;
-  setValueSafe<T = any>(key: string, value: T, version?: number, basicType?: boolean): Promise<SetValueResult<T>>;
+  setValueSafe<T = any>(key: string, value: T, version: number, basicType?: boolean): Promise<SetValueResult<T>>;
   increment(key: string, value?: number | string): Promise<void>;
   remove(key: string): Promise<void>;
 

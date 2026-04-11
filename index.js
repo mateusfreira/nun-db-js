@@ -199,12 +199,14 @@
     }
 
     setValueSafe(name, value, _version, basicType) {
-      const localValue = getLocalValue(name);
+      if (_version == null) {
+        throw new Error('setValueSafe requires a version argument; use setValue() if you do not care about the prior version');
+      }
       const objValue = {
         _id: this.nextMessageId(),
         value,
       };
-      const version = _version ? _version : localValue.version;
+      const version = _version;
       storeLocalValue(name, {
         value: objValue,
         version,

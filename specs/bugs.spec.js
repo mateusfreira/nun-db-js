@@ -33,6 +33,60 @@ describe('Regression bugs', function() {
     });
   });
 
+  describe('falsy envelope unwrapping (index.js:420, 434, 589)', function() {
+    it('_valueHandler resolves with 0 when the stored envelope value is 0', function() {
+      const db = makeBareDb();
+      let resolvedWith;
+      db._pendingPromises.push({
+        kind: 'get',
+        key: 'count',
+        pedingResolve: function(v) { resolvedWith = v; },
+        pedingReject: function() {},
+      });
+
+      db._valueHandler('{"_id":1,"value":0}');
+
+      expect(resolvedWith).to.equal(0);
+    });
+
+    it('_valueVersionHandler resolves with empty string when the stored envelope value is ""', function() {
+      const db = makeBareDb();
+      let resolvedWith;
+      db._pendingPromises.push({
+        kind: 'get-safe',
+        key: 'label',
+        pedingResolve: function(v) { resolvedWith = v; },
+        pedingReject: function() {},
+      });
+
+      db._valueVersionHandler('7 {"_id":1,"value":""}');
+
+      expect(resolvedWith).to.deep.equal({ value: '', version: 7 });
+    });
+
+    it('_changedVersionHandler delivers false to watchers when the new value is false', function() {
+      const db = makeBareDb();
+      let received;
+      db._watchers['flag'] = [function(evt) { received = evt; }];
+
+      db._changedVersionHandler('flag 3 {"_id":1,"value":false}');
+
+      expect(received).to.exist;
+      expect(received.value).to.equal(false);
+    });
+  });
+
+  describe('setValueSafe missing-version error message (index.js:207)', function() {
+    it('throws a clear "version is required" error when version is omitted', function() {
+      const db = makeBareDb();
+      db._start = Date.now();
+      db._messages = 0;
+
+      expect(function() { db.setValueSafe('brand-new-key', 'hello'); })
+        .to.throw(/requires a version/i);
+    });
+  });
+
   describe('_changedVersionHandler catch logging (index.js:594)', function() {
     it('logs the watcher key (not an unrelated global) when value parsing throws', function() {
       const db = makeBareDb();
