@@ -213,6 +213,9 @@
         pendding: true
       });
       this._ids.push(objValue._id);
+      if (this._ids.length > 1000) {
+        this._ids.shift();
+      }
       return this._checkConnectionReady().then(() => {
         const command = `set-safe ${name} ${version} ${ basicType ? value : objToValue(objValue)}`;
         this._connection.send(command);

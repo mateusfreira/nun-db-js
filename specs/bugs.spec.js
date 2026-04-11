@@ -87,6 +87,21 @@ describe('Regression bugs', function() {
     });
   });
 
+  describe('_ids unbounded growth (index.js:215)', function() {
+    it('keeps at most 1000 entries in _ids regardless of how many writes happen', function() {
+      const db = makeBareDb();
+      db._start = Date.now();
+      db._messages = 0;
+      db._connectionPromise = Promise.resolve();
+
+      for (let i = 0; i < 1500; i++) {
+        db.setValueSafe('k', 'v', 1);
+      }
+
+      expect(db._ids.length).to.be.at.most(1000);
+    });
+  });
+
   describe('_changedVersionHandler catch logging (index.js:594)', function() {
     it('logs the watcher key (not an unrelated global) when value parsing throws', function() {
       const db = makeBareDb();
