@@ -412,8 +412,8 @@
 
     _valueHandler(value) {
       const pendingPromise = this._dequeuePromise();
-      if(['get', 'get-safe', 'keys-sent'].indexOf(pendingPromise.kind)) {
-        throw Error('Invalid resolved promise!`');
+      if (!pendingPromise || ['get', 'get-safe', 'keys-sent'].indexOf(pendingPromise.kind) === -1) {
+        throw new Error(`Invalid resolved promise: ${pendingPromise && pendingPromise.kind}`);
       }
       try {
         const jsonValue = value !== EMPTY ? valueToObj(value) : null;
@@ -591,7 +591,7 @@
             });
           }
         } catch (e) {
-          this._logger.error(e, { name, value});
+          this._logger.error(e, { key, value });
           watcher({
             name: key,
             value: value,
