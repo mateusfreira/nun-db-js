@@ -86,35 +86,60 @@ function showDateData(_dateData) {
   } else {
     const options = {
       series: [{
-        name: 'Page virews',
+        name: 'Page views',
         data: dateData.map(d => d.value),
       }],
+      colors: ['#00d4ff'],
       chart: {
         height: 350,
-        type: 'line',
-        zoom: {
-          enabled: false
+        type: 'area',
+        background: 'transparent',
+        foreColor: '#8b93c7',
+        toolbar: { show: false },
+        zoom: { enabled: false }
+      },
+      theme: { mode: 'dark' },
+      dataLabels: { enabled: false },
+      stroke: {
+        curve: 'smooth',
+        width: 3
+      },
+      fill: {
+        type: 'gradient',
+        gradient: {
+          shadeIntensity: 1,
+          opacityFrom: 0.45,
+          opacityTo: 0.05,
+          stops: [0, 100],
+          colorStops: [
+            { offset: 0, color: '#00d4ff', opacity: 0.5 },
+            { offset: 100, color: '#6c5ce7', opacity: 0 }
+          ]
         }
       },
-      dataLabels: {
-        enabled: false
-      },
-      stroke: {
-        curve: 'straight'
-      },
-      title: {
-        text: 'Page virews by date',
-        align: 'left'
+      markers: {
+        size: 4,
+        colors: ['#00d4ff'],
+        strokeColors: '#0b1020',
+        strokeWidth: 2,
+        hover: { size: 6 }
       },
       grid: {
-        row: {
-          colors: ['#f3f3f3', 'transparent'], // takes an array which will be repeated on columns
-          opacity: 0.5
-        },
+        borderColor: 'rgba(255,255,255,0.06)',
+        strokeDashArray: 4,
+        xaxis: { lines: { show: false } },
+        yaxis: { lines: { show: true } }
       },
       xaxis: {
         categories: dateData.map(d => d.label),
-      }
+        axisBorder: { color: 'rgba(255,255,255,0.08)' },
+        axisTicks: { color: 'rgba(255,255,255,0.08)' },
+        labels: { style: { colors: '#8b93c7' } }
+      },
+      yaxis: {
+        labels: { style: { colors: '#8b93c7' } }
+      },
+      tooltip: { theme: 'dark' }
     };
 
     const chart = new ApexCharts(document.querySelector('#chart'), options);
@@ -158,16 +183,18 @@ function showPageData(_pagesData) {
         name: 'Reads',
         data: pagesData.map(p => p.value),
       }],
+      colors: ['#6c5ce7'],
       annotations: {
         points: [{
           x: '/',
           seriesIndex: 0,
           label: {
-            borderColor: '#775DD0',
+            borderColor: '#00d4ff',
             offsetY: 0,
             style: {
-              color: '#fff',
-              background: '#775DD0',
+              color: '#0b1020',
+              background: '#00d4ff',
+              fontWeight: 600,
             },
             text: 'Home page',
           }
@@ -176,50 +203,59 @@ function showPageData(_pagesData) {
       chart: {
         height: 350,
         type: 'bar',
+        background: 'transparent',
+        foreColor: '#8b93c7',
+        toolbar: { show: false }
       },
+      theme: { mode: 'dark' },
       plotOptions: {
         bar: {
-          borderRadius: 10,
-          columnWidth: '50%',
+          borderRadius: 8,
+          columnWidth: '55%',
+          distributed: false,
         }
       },
-      dataLabels: {
-        enabled: false
-      },
+      dataLabels: { enabled: false },
       stroke: {
-        width: 2
+        width: 0
       },
-
       grid: {
-        row: {
-          colors: ['#fff', '#f2f2f2']
-        }
+        borderColor: 'rgba(255,255,255,0.06)',
+        strokeDashArray: 4,
+        xaxis: { lines: { show: false } },
+        yaxis: { lines: { show: true } }
       },
       xaxis: {
         labels: {
-          rotate: -45
+          rotate: -45,
+          style: { colors: '#8b93c7' }
         },
         categories: pagesData.map(p => p.label),
-        tickPlacement: 'on'
+        tickPlacement: 'on',
+        axisBorder: { color: 'rgba(255,255,255,0.08)' },
+        axisTicks: { color: 'rgba(255,255,255,0.08)' }
       },
       yaxis: {
         title: {
           text: 'Reads',
+          style: { color: '#8b93c7', fontWeight: 500 }
         },
+        labels: { style: { colors: '#8b93c7' } }
       },
       fill: {
         type: 'gradient',
         gradient: {
-          shade: 'light',
-          type: 'horizontal',
-          shadeIntensity: 0.25,
-          gradientToColors: undefined,
-          inverseColors: true,
-          opacityFrom: 0.85,
-          opacityTo: 0.85,
-          stops: [50, 0, 100]
+          shade: 'dark',
+          type: 'vertical',
+          shadeIntensity: 0.4,
+          gradientToColors: ['#00d4ff'],
+          inverseColors: false,
+          opacityFrom: 0.95,
+          opacityTo: 0.75,
+          stops: [0, 100]
         },
-      }
+      },
+      tooltip: { theme: 'dark' }
     };
     charts.pageChart = new ApexCharts(document.querySelector('#page-chart'), pageOptions);
     charts.pageChart.render();

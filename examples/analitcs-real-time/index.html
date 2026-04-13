@@ -1,126 +1,430 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<title>Analitcs Nun-db</title>
-		<style type="text/css" media="screen">
-#online{
-	margin: auto;
-	width: 400px;
-	border: 0px solid black;
-	padding: 10px;
-	text-align: center;
-	font-size: 45px;
-}
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Nun-db · Real-time analytics</title>
+
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+
+		<style>
+			:root {
+				--bg: #0b1020;
+				--bg-soft: #111735;
+				--card: #151c3b;
+				--card-2: #1a2348;
+				--border: #242d55;
+				--text: #e8ecff;
+				--text-dim: #8b93c7;
+				--accent: #6c5ce7;
+				--accent-2: #00d4ff;
+				--success: #00c48c;
+				--shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+				--radius: 14px;
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			html,
+			body {
+				margin: 0;
+				padding: 0;
+			}
+
+			body {
+				font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+					Roboto, sans-serif;
+				color: var(--text);
+				background: radial-gradient(
+						1200px 600px at 10% -10%,
+						rgba(108, 92, 231, 0.25),
+						transparent 60%
+					),
+					radial-gradient(
+						1000px 500px at 100% 0%,
+						rgba(0, 212, 255, 0.18),
+						transparent 60%
+					),
+					var(--bg);
+				min-height: 100vh;
+				-webkit-font-smoothing: antialiased;
+			}
+
+			.wrap {
+				max-width: 1200px;
+				margin: 0 auto;
+				padding: 32px 24px 64px;
+			}
+
+			header.topbar {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 24px;
+				margin-bottom: 28px;
+			}
+
+			.brand {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+			}
+
+			.brand-dot {
+				width: 12px;
+				height: 12px;
+				border-radius: 50%;
+				background: var(--success);
+				box-shadow: 0 0 0 4px rgba(0, 196, 140, 0.18);
+				animation: pulse 2s infinite;
+			}
+
+			@keyframes pulse {
+				0%,
+				100% {
+					box-shadow: 0 0 0 4px rgba(0, 196, 140, 0.18);
+				}
+				50% {
+					box-shadow: 0 0 0 8px rgba(0, 196, 140, 0.08);
+				}
+			}
+
+			.brand h1 {
+				font-size: 18px;
+				font-weight: 600;
+				margin: 0;
+				letter-spacing: 0.2px;
+			}
+
+			.brand small {
+				display: block;
+				font-size: 12px;
+				color: var(--text-dim);
+				font-weight: 400;
+			}
+
+			.hero {
+				background: linear-gradient(
+					135deg,
+					rgba(108, 92, 231, 0.18),
+					rgba(0, 212, 255, 0.08)
+				);
+				border: 1px solid var(--border);
+				border-radius: var(--radius);
+				padding: 28px 32px;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 24px;
+				flex-wrap: wrap;
+				box-shadow: var(--shadow);
+				margin-bottom: 24px;
+			}
+
+			.hero .label {
+				font-size: 13px;
+				text-transform: uppercase;
+				letter-spacing: 1.5px;
+				color: var(--text-dim);
+				margin-bottom: 6px;
+			}
+
+			#online {
+				font-size: 56px;
+				font-weight: 700;
+				line-height: 1;
+				background: linear-gradient(90deg, #fff, var(--accent-2));
+				-webkit-background-clip: text;
+				background-clip: text;
+				color: transparent;
+			}
+
+			#online-users {
+				font-variant-numeric: tabular-nums;
+			}
+
+			.hero-meta {
+				display: flex;
+				gap: 24px;
+			}
+
+			.hero-meta .pill {
+				background: rgba(255, 255, 255, 0.05);
+				border: 1px solid var(--border);
+				border-radius: 999px;
+				padding: 8px 16px;
+				font-size: 12px;
+				color: var(--text-dim);
+			}
+
+			.grid {
+				display: grid;
+				gap: 20px;
+			}
+
+			.grid.charts {
+				grid-template-columns: 1fr 1fr;
+				margin-bottom: 20px;
+			}
+
+			.grid.stats {
+				grid-template-columns: repeat(4, 1fr);
+			}
+
+			@media (max-width: 960px) {
+				.grid.charts {
+					grid-template-columns: 1fr;
+				}
+				.grid.stats {
+					grid-template-columns: repeat(2, 1fr);
+				}
+				#online {
+					font-size: 44px;
+				}
+			}
+
+			@media (max-width: 560px) {
+				.grid.stats {
+					grid-template-columns: 1fr;
+				}
+				.wrap {
+					padding: 20px 16px 48px;
+				}
+			}
+
+			.card {
+				background: var(--card);
+				border: 1px solid var(--border);
+				border-radius: var(--radius);
+				padding: 22px;
+				box-shadow: var(--shadow);
+				transition: transform 0.15s ease, border-color 0.15s ease;
+			}
+
+			.card:hover {
+				transform: translateY(-2px);
+				border-color: rgba(108, 92, 231, 0.5);
+			}
+
+			.card h3 {
+				margin: 0 0 4px;
+				font-size: 14px;
+				font-weight: 600;
+				color: var(--text-dim);
+				text-transform: uppercase;
+				letter-spacing: 1px;
+			}
+
+			.card .subtitle {
+				margin: 0 0 18px;
+				font-size: 13px;
+				color: var(--text-dim);
+			}
+
+			.card .big {
+				font-size: 38px;
+				font-weight: 700;
+				line-height: 1;
+				font-variant-numeric: tabular-nums;
+			}
+
+			.card .big h2 {
+				font-size: 38px;
+				font-weight: 700;
+				margin: 0;
+				line-height: 1;
+			}
+
+			.card.chart-card {
+				padding: 22px 18px 10px;
+			}
+
+			.card.chart-card h3 {
+				padding: 0 6px 10px;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+
+			.card.chart-card h3 #total {
+				font-size: 12px;
+				color: var(--accent-2);
+				background: rgba(0, 212, 255, 0.1);
+				padding: 4px 10px;
+				border-radius: 999px;
+				font-variant-numeric: tabular-nums;
+			}
+
+			#total-languages ul,
+			#total-locations ul {
+				list-style: none;
+				padding: 0;
+				margin: 14px 0 0;
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+				max-height: 220px;
+				overflow-y: auto;
+			}
+
+			#total-languages li,
+			#total-locations li {
+				display: flex;
+				justify-content: space-between;
+				font-size: 13px;
+				padding: 8px 12px;
+				background: var(--card-2);
+				border-radius: 8px;
+				border: 1px solid transparent;
+				transition: border-color 0.15s ease;
+			}
+
+			#total-languages li:hover,
+			#total-locations li:hover {
+				border-color: var(--border);
+			}
+
+			#total-languages li b,
+			#total-locations li b {
+				color: var(--text);
+				font-weight: 500;
+			}
+
+			#events {
+				margin: 0;
+				display: flex;
+				flex-direction: column;
+				gap: 6px;
+				max-height: 220px;
+				overflow-y: auto;
+				font-family: "SF Mono", Menlo, Consolas, monospace;
+				font-size: 12px;
+			}
+
+			#events div {
+				padding: 8px 12px;
+				background: var(--card-2);
+				border-radius: 6px;
+				color: var(--text-dim);
+				border-left: 2px solid var(--accent);
+				animation: slideIn 0.3s ease;
+			}
+
+			@keyframes slideIn {
+				from {
+					opacity: 0;
+					transform: translateX(-8px);
+				}
+				to {
+					opacity: 1;
+					transform: translateX(0);
+				}
+			}
+
+			::-webkit-scrollbar {
+				width: 8px;
+			}
+			::-webkit-scrollbar-track {
+				background: transparent;
+			}
+			::-webkit-scrollbar-thumb {
+				background: var(--border);
+				border-radius: 4px;
+			}
+			::-webkit-scrollbar-thumb:hover {
+				background: var(--accent);
+			}
+
+			/* ApexCharts dark theme tweaks */
+			.apexcharts-text,
+			.apexcharts-legend-text,
+			.apexcharts-title-text {
+				fill: var(--text-dim) !important;
+				color: var(--text-dim) !important;
+			}
+			.apexcharts-gridline {
+				stroke: rgba(255, 255, 255, 0.05) !important;
+			}
+			.apexcharts-tooltip {
+				background: var(--card-2) !important;
+				border: 1px solid var(--border) !important;
+				color: var(--text) !important;
+			}
+			.apexcharts-tooltip-title {
+				background: var(--bg-soft) !important;
+				border-bottom: 1px solid var(--border) !important;
+			}
 		</style>
 
-		<link
-		rel="stylesheet"
-	href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
- />
-
-
-		<link
-		rel="stylesheet"
-	href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
- />
-
-		<link
-		rel="stylesheet"
-	href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
- />
-		<link
-		href="https://fonts.googleapis.com/css?family=Titillium+Web:400,600,700"
-	rel="stylesheet"
- />
-		<link
-		rel="stylesheet"
-	href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
- />
-		<link
-		href="https://fonts.googleapis.com/css?family=Titillium+Web:400,600,700"
-	rel="stylesheet"
- />
-
-		<script charset="utf-8" src="https://cdn.jsdelivr.net/npm/nun-db@1.8.0/index.js"></script>
-		<!--
-      <script charset="utf-8" src="../../index.js"></script>
-    -->
+		<script charset="utf-8" src="../../index.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-		<script charset="utf-8" src="./nun.js" ></script>
+		<script charset="utf-8" src="./nun.js"></script>
 		<script src="./analitcs.js"></script>
 	</head>
-	<body class="d-flex flex-column h-100">
-		<main class="flex-shrink-0">
-			<div class="container px-4 py-5">
-				<h2 class="pb-2 border-bottom">Site analytics with nun-db</h2>
-				<div class="container">
-					<p>
-						<div id="online">
-							User online : <span id="online-users"> 1 </span>
-						</div>
-					</p>
-				</div>
-				<div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
-					<div class="feature col">
-						<h2>
-							Page views
-							<span id="total"></span>
-						</h2>
-						<div id="chart">
-						</div>
-					</div>
-					<div class="feature col">
-						<h2>
-							Most viewed pages
-						</h2>
-						<div id="page-chart">
-						</div>
+	<body>
+		<div class="wrap">
+			<header class="topbar">
+				<div class="brand">
+					<span class="brand-dot"></span>
+					<div>
+						<h1>Nun-db Analytics</h1>
+						<small>Real-time site metrics</small>
 					</div>
 				</div>
-			</div>
-			<div class="container px-4 py-5">
-			<div class="row">
-				<div class="col-sm-12">
-					<div class="card">
-						<div class="card-body">
-							<h5 class="card-title">Users</h5>
-							<p class="card-text">Different Users access</p>
-							<p class="card-text" id="total-users"></p>
-						</div>
-					</div>
+			</header>
+
+			<section class="hero">
+				<div>
+					<div class="label">Users online right now</div>
+					<div id="online"><span id="online-users">1</span></div>
+				</div>
+				<div class="hero-meta">
+					<div class="pill">Live · WebSocket</div>
+					<div class="pill">Powered by Nun-db</div>
+				</div>
+			</section>
+
+			<div class="grid charts">
+				<div class="card chart-card">
+					<h3>
+						Page views
+						<span id="total"></span>
+					</h3>
+					<div id="chart"></div>
+				</div>
+				<div class="card chart-card">
+					<h3>Most viewed pages</h3>
+					<div id="page-chart"></div>
 				</div>
 			</div>
-			<div class="row">
-				<div class="col-sm-6">
-					<div class="card">
-						<div class="card-body">
-							<h5 class="card-title">Langages</h5>
-							<p class="card-text">Different languages</p>
-							<p class="card-text" id="total-languages"></p>
-						</div>
-					</div>
+
+			<div class="grid stats">
+				<div class="card">
+					<h3>Unique users</h3>
+					<p class="subtitle">Different users accessed</p>
+					<div class="big" id="total-users"></div>
 				</div>
-				<div class="col-sm-6">
-					<div class="card">
-						<div class="card-body">
-							<h5 class="card-title">Locations</h5>
-							<p class="card-text">Different Locations</p>
-							<p class="card-text" id="total-locations"></p>
-						</div>
-					</div>
+				<div class="card">
+					<h3>Languages</h3>
+					<p class="subtitle">Top visitor languages</p>
+					<div id="total-languages"></div>
 				</div>
-				<div class="col-sm-6">
-					<div class="card">
-						<div class="card-body">
-							<h5 class="card-title">Last page events</h5>
-							<p class="card-text">Last events</p>
-							<p class="card-text" id="events"></p>
-						</div>
-					</div>
+				<div class="card">
+					<h3>Locations</h3>
+					<p class="subtitle">Top visitor locations</p>
+					<div id="total-locations"></div>
+				</div>
+				<div class="card">
+					<h3>Recent events</h3>
+					<p class="subtitle">Last page events stream</p>
+					<p id="events"></p>
 				</div>
 			</div>
-		</main>
+		</div>
 	</body>
 </html>
